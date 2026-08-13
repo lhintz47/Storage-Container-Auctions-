@@ -1,0 +1,461 @@
+<title>Container Control System</title>
+<style>
+  :root {
+    --paper: #eef0f1;
+    --paper-raised: #ffffff;
+    --paper-sunken: #e2e7e8;
+    --ink: #12181a;
+    --ink-muted: #4c5a5e;
+    --ink-faint: #7a8a8e;
+    --line: #cfd8da;
+    --line-strong: #aebcbf;
+    --accent: #a9660f;
+    --accent-ink: #ffffff;
+    --accent2: #146b82;
+    --accent2-ink: #ffffff;
+    --ok: #2f7d52;
+    --ok-bg: #e2f0e7;
+    --fault: #b23b30;
+    --fault-bg: #f6e2e0;
+    --open: #a13a3a;
+    --open-bg: #f6e3e0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #10161a;
+      --paper-raised: #182024;
+      --paper-sunken: #0c1215;
+      --ink: #e7ecec;
+      --ink-muted: #97a6a9;
+      --ink-faint: #66787c;
+      --line: #263136;
+      --line-strong: #384549;
+      --accent: #d99a3f;
+      --accent-ink: #14181a;
+      --accent2: #4fb2cc;
+      --accent2-ink: #0a1a1e;
+      --ok: #5cb684;
+      --ok-bg: #17301f;
+      --fault: #e0776a;
+      --fault-bg: #341c19;
+      --open: #e08484;
+      --open-bg: #2e1c1c;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #10161a;
+    --paper-raised: #182024;
+    --paper-sunken: #0c1215;
+    --ink: #e7ecec;
+    --ink-muted: #97a6a9;
+    --ink-faint: #66787c;
+    --line: #263136;
+    --line-strong: #384549;
+    --accent: #d99a3f;
+    --accent-ink: #14181a;
+    --accent2: #4fb2cc;
+    --accent2-ink: #0a1a1e;
+    --ok: #5cb684;
+    --ok-bg: #17301f;
+    --fault: #e0776a;
+    --fault-bg: #341c19;
+    --open: #e08484;
+    --open-bg: #2e1c1c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  a { color: var(--accent2); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .manifest-head {
+    background: var(--paper-sunken);
+    border-bottom: 1px solid var(--line-strong);
+    padding: 2.6rem 1.5rem 1.8rem;
+  }
+  .manifest-inner { max-width: 1000px; margin: 0 auto; }
+  .stamp-row { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 1rem; margin-bottom: 0.6rem; }
+  .stamp-row .doc-code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 0.76rem; letter-spacing: 0.08em; color: var(--ink-faint); text-transform: uppercase; }
+
+  h1.title {
+    font-weight: 800;
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    margin: 0 0 0.3rem;
+    text-wrap: balance;
+  }
+  .subhead { color: var(--ink-muted); font-size: 1.02rem; max-width: 68ch; margin: 0 0 1.6rem; }
+
+  .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--line-strong); border: 1px solid var(--line-strong); }
+  .stat-cell { background: var(--paper-raised); padding: 0.7rem 0.9rem; }
+  .stat-cell .k { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); font-weight: 700; display: block; margin-bottom: 0.2rem; }
+  .stat-cell .v { font-weight: 700; font-size: 0.92rem; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 2.4rem 1.5rem 5rem; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 2.8rem; align-items: start; }
+
+  nav.toc { position: sticky; top: 1.6rem; font-size: 0.82rem; }
+  nav.toc .toc-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.66rem; font-weight: 700; color: var(--ink-faint); margin-bottom: 0.7rem; display: block; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
+  nav.toc a { display: block; padding: 0.32rem 0 0.32rem 0.8rem; margin-left: -2px; border-left: 2px solid transparent; color: var(--ink-muted); text-decoration: none; }
+  nav.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  nav.toc .n { color: var(--ink-faint); margin-right: 0.35em; font-family: ui-monospace, monospace; }
+
+  main { min-width: 0; }
+  section.block { margin-bottom: 3rem; scroll-margin-top: 1.5rem; }
+  .block-tag { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem; }
+  .block-tag .code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 0.7rem; letter-spacing: 0.06em; background: var(--ink); color: var(--paper); padding: 0.2rem 0.5rem; border-radius: 2px; }
+
+  h2 { font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; font-size: 1.1rem; margin: 0; text-wrap: balance; }
+  h3 { font-weight: 700; font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-muted); margin: 1.5rem 0 0.6rem; }
+  h4 { font-weight: 700; font-size: 0.86rem; margin: 1.1rem 0 0.4rem; color: var(--ink); }
+
+  p { max-width: 72ch; margin: 0 0 0.9rem; }
+  .block > p:first-of-type { margin-top: 0; }
+  ul.plain, ol.plain { max-width: 72ch; padding-left: 1.2rem; margin: 0 0 0.9rem; }
+  ul.plain li, ol.plain li { margin-bottom: 0.4rem; }
+
+  .callout { border-left: 3px solid var(--accent); background: var(--paper-raised); padding: 0.75rem 1rem; max-width: 68ch; font-size: 0.9rem; margin: 0.9rem 0; }
+  .callout strong { color: var(--accent); }
+  .callout.info { border-left-color: var(--accent2); }
+  .callout.info strong { color: var(--accent2); }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line-strong); margin-bottom: 0.9rem; }
+  table.data { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.85rem; }
+  table.data th, table.data td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0.55rem 0.75rem; text-align: left; vertical-align: top; }
+  table.data th:last-child, table.data td:last-child { border-right: none; }
+  table.data thead th { text-transform: uppercase; font-size: 0.66rem; letter-spacing: 0.06em; background: var(--paper-sunken); color: var(--ink-muted); }
+  table.data tbody tr:last-child td { border-bottom: none; }
+  table.data td.num, table.data th.num { font-family: ui-monospace, monospace; text-align: right; }
+  table.data tr.total td { font-weight: 700; background: var(--paper-sunken); }
+
+  /* System diagram */
+  .diagram { border: 1px solid var(--line-strong); background: var(--paper-raised); padding: 1.4rem; margin: 1rem 0 1.2rem; }
+  .diagram-row { display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+  .diagram-node { border: 1.5px solid var(--line-strong); background: var(--paper-sunken); padding: 0.55rem 0.9rem; font-size: 0.78rem; font-weight: 700; text-align: center; min-width: 110px; }
+  .diagram-node.hub { border-color: var(--accent); color: var(--accent); background: var(--paper-raised); min-width: 140px; }
+  .diagram-node.cloud { border-color: var(--accent2); color: var(--accent2); }
+  .diagram-arrow { color: var(--ink-faint); font-family: ui-monospace, monospace; font-size: 0.85rem; }
+  .diagram-caption { text-align: center; font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.4rem; }
+
+  .model-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin: 1rem 0 0.5rem; }
+  .model-card { background: var(--paper-raised); border: 1px solid var(--line-strong); padding: 1rem 1.1rem; }
+  .model-card h4 { margin-top: 0; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.04em; }
+  .model-card.recommended { border-color: var(--accent); }
+  .model-card.recommended h4 { color: var(--accent); }
+  .model-card ul { margin: 0.4rem 0 0; padding-left: 1.1rem; font-size: 0.86rem; }
+  .model-card li { margin-bottom: 0.3rem; }
+
+  .state-list { list-style: none; padding: 0; margin: 0.6rem 0 1rem; max-width: 72ch; }
+  .state-item { display: grid; grid-template-columns: 150px 1fr; gap: 0.7rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+  .state-item:last-child { border-bottom: none; }
+  .state-item .state-name { font-family: ui-monospace, monospace; font-weight: 700; color: var(--accent2); }
+
+  .open-list { list-style: none; padding: 0; margin: 0.8rem 0 0; max-width: 72ch; }
+  .open-item { display: grid; grid-template-columns: 22px 1fr; gap: 0.5rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+  .open-item:last-child { border-bottom: none; }
+  .open-item .mark { color: var(--open); background: var(--open-bg); font-family: ui-monospace, monospace; font-size: 0.7rem; text-align: center; border-radius: 2px; padding: 0.15rem 0; height: fit-content; }
+  .open-item strong { display: block; margin-bottom: 0.1rem; }
+  .open-item span.note { color: var(--ink-muted); font-size: 0.86rem; }
+
+  @media (max-width: 720px) {
+    .page { grid-template-columns: 1fr; }
+    nav.toc { position: static; border-bottom: 1px solid var(--line); padding-bottom: 1rem; margin-bottom: 0.5rem; }
+    nav.toc ol { columns: 2; border-left: none; }
+    nav.toc a { border-left: none; padding-left: 0; }
+    .model-cards { grid-template-columns: 1fr; }
+    table.data { min-width: 540px; }
+    .diagram-row { flex-direction: column; }
+  }
+</style>
+
+<div class="manifest-head">
+  <div class="manifest-inner">
+    <div class="stamp-row">
+      <span class="doc-code">SPEC // UNIT-CONTROL-SYSTEM</span>
+      <span class="doc-code">STATUS: DRAFT ARCHITECTURE</span>
+    </div>
+    <h1 class="title">Container Control System</h1>
+    <p class="subhead">Hardware and software architecture for a self-contained, solar-powered control unit monitoring and securing an individual storage/auction container section: alarm, safety lighting, access lock, sensors, camera, and the backend that all of it reports to.</p>
+    <div class="stat-strip">
+      <div class="stat-cell"><span class="k">Power</span><span class="v">Solar + battery, per unit</span></div>
+      <div class="stat-cell"><span class="k">Connectivity</span><span class="v">Cellular (LTE-M/NB-IoT + LTE)</span></div>
+      <div class="stat-cell"><span class="k">Uplink protocol</span><span class="v">MQTT over TLS</span></div>
+      <div class="stat-cell"><span class="k">Lock model</span><span class="v">Standalone smart padlock, cloud-correlated</span></div>
+      <div class="stat-cell"><span class="k">Camera</span><span class="v">Self-contained cellular PTZ unit</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <nav class="toc" aria-label="Sections">
+    <span class="toc-label">Contents</span>
+    <ol>
+      <li><a href="#overview"><span class="n">01</span>System overview</a></li>
+      <li><a href="#controller"><span class="n">02</span>Unit controller</a></li>
+      <li><a href="#sensors"><span class="n">03</span>Sensor &amp; actuator suite</a></li>
+      <li><a href="#lock"><span class="n">04</span>Lock integration</a></li>
+      <li><a href="#camera"><span class="n">05</span>Camera subsystem</a></li>
+      <li><a href="#power"><span class="n">06</span>Power budget</a></li>
+      <li><a href="#connectivity"><span class="n">07</span>Connectivity &amp; data budget</a></li>
+      <li><a href="#backend"><span class="n">08</span>Backend architecture</a></li>
+      <li><a href="#security"><span class="n">09</span>Security model</a></li>
+      <li><a href="#failure"><span class="n">10</span>Failure modes &amp; recovery</a></li>
+      <li><a href="#commissioning"><span class="n">11</span>Provisioning &amp; commissioning</a></li>
+      <li><a href="#open"><span class="n">12</span>Open engineering questions</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section class="block" id="overview">
+      <div class="block-tag"><span class="code">SPEC&#8209;01</span><h2>System overview</h2></div>
+      <p>Each unit runs two loosely-coupled subsystems that share a physical location but not a single point of failure: a <strong>unit controller</strong> handling alarm, safety lighting, environmental sensors, and telemetry; and a <strong>standalone cellular camera</strong> handling live/PTZ video independently. Both report to a shared cloud backend, which is the only place their data is correlated.</p>
+      <div class="diagram">
+        <div class="diagram-row">
+          <div class="diagram-node">Door / motion / tamper sensors</div>
+          <span class="diagram-arrow">&rarr;</span>
+          <div class="diagram-node hub">Unit Controller (MCU)</div>
+          <span class="diagram-arrow">&rarr;</span>
+          <div class="diagram-node cloud">Backend (MQTT ingest)</div>
+        </div>
+        <div class="diagram-row">
+          <div class="diagram-node">Smoke / heat / GPS / battery</div>
+          <span class="diagram-arrow">&uarr;</span>
+          <div class="diagram-node hub">&nbsp;</div>
+          <span class="diagram-arrow">&darr;</span>
+          <div class="diagram-node">Alarm siren / safety lighting</div>
+        </div>
+        <div class="diagram-row">
+          <div class="diagram-node">Smart padlock (standalone)</div>
+          <span class="diagram-arrow">&rarr;</span>
+          <div class="diagram-node cloud">Lock vendor cloud</div>
+          <span class="diagram-arrow">&rarr;</span>
+          <div class="diagram-node cloud">Backend (correlation)</div>
+        </div>
+        <div class="diagram-row">
+          <div class="diagram-node">Cellular PTZ camera</div>
+          <span class="diagram-arrow">&harr;</span>
+          <div class="diagram-node cloud">Backend (relay / media server)</div>
+        </div>
+        <p class="diagram-caption">Three independent uplinks (controller, lock, camera) converge only at the backend — no direct wiring between them.</p>
+      </div>
+      <p>That separation is deliberate: a standalone smart padlock and a self-contained cellular camera are both off-the-shelf hardware with their own power and connectivity, so neither has to be wired into the controller. The tradeoff, worked through in Sec. 04 and Sec. 05, is that correlating "was this door opened with a valid code" or arbitrating PTZ control happens in software at the backend, not in a local wire.</p>
+    </section>
+
+    <section class="block" id="controller">
+      <div class="block-tag"><span class="code">SPEC&#8209;02</span><h2>Unit controller</h2></div>
+      <p>The controller is the only always-on, hard-wired component in the unit. It owns the alarm, the safety lighting, and every sensor except the lock and camera.</p>
+      <h3>Hardware</h3>
+      <ul class="plain">
+        <li><strong>MCU class:</strong> ESP32- or STM32-class microcontroller with a real-time OS or bare-metal event loop — low idle power draw is the driver, not raw compute.</li>
+        <li><strong>Enclosure:</strong> IP65+ weatherproof, vented for the battery, mounted inside the container near the door for direct sensor wiring runs.</li>
+        <li><strong>Power bus:</strong> single 12V DC bus off the battery, with a buck converter stepping down to 3.3V/5V logic rails for the MCU and sensors.</li>
+        <li><strong>Local storage:</strong> onboard flash or a small SD card for the store-and-forward event buffer (Sec. 10).</li>
+      </ul>
+      <h3>Firmware state machine</h3>
+      <ul class="state-list">
+        <li class="state-item"><span class="state-name">BOOT</span><span>Self-test on power-up: verify sensor bus, battery voltage, cellular modem registration. Fails to <span class="mono">FAULT</span> on any check failure.</span></li>
+        <li class="state-item"><span class="state-name">ARMED_SETUP</span><span>Setup window active. Door-open expected and not alarmed; still logged and reported.</span></li>
+        <li class="state-item"><span class="state-name">ARMED_SEALED</span><span>Unit sealed, no access window open. Any door-open event immediately escalates to <span class="mono">ALARM</span>.</span></li>
+        <li class="state-item"><span class="state-name">ARMED_REMOVAL</span><span>Removal window active — same posture as <span class="mono">ARMED_SETUP</span>, different reporting context.</span></li>
+        <li class="state-item"><span class="state-name">ALARM</span><span>Siren and strobe drive immediately and locally, independent of connectivity (Sec. 10) — the network report is best-effort, the local response is not.</span></li>
+        <li class="state-item"><span class="state-name">FAULT</span><span>Self-test or runtime health check failed. Alarm/lighting outputs held in their last safe state; controller reports fault and awaits remote diagnosis or reset.</span></li>
+      </ul>
+      <h3>Behavior</h3>
+      <ul class="plain">
+        <li><strong>Heartbeat:</strong> periodic keepalive publish (interval TBD, Sec. 12) — a missed heartbeat is what the backend treats as a lost-controller fault, not a special "I'm dying" message the controller has to send.</li>
+        <li><strong>Watchdog:</strong> hardware watchdog timer resets the MCU on firmware hang; state machine re-enters <span class="mono">BOOT</span> and re-asserts the last known armed state from local flash.</li>
+        <li><strong>OTA updates:</strong> signed firmware images pulled from the backend on a maintenance window, staged to a secondary flash partition, only committed after a successful post-update self-test — failed boot rolls back automatically.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="sensors">
+      <div class="block-tag"><span class="code">SPEC&#8209;03</span><h2>Sensor &amp; actuator suite</h2></div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Component</th><th>Type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Door-open sensor</td><td>Magnetic reed switch</td><td>Binary open/closed; wired directly to controller GPIO, not cloud-dependent to register the event.</td></tr>
+            <tr><td>Motion detector</td><td>PIR</td><td>Interior-facing; only meaningful while armed (unit should be empty).</td></tr>
+            <tr><td>Tamper switch</td><td>Case-open microswitch</td><td>On both the controller enclosure and, where the lock hardware supports it, the lock body.</td></tr>
+            <tr><td>Fire/smoke/heat</td><td>Photoelectric smoke + thermistor heat-rise</td><td>Dual-sensor confirmation before escalating to a full fire alert reduces false triggers from dust or temperature swings alone.</td></tr>
+            <tr><td>GPS/movement</td><td>u-blox-class GNSS module</td><td>Duty-cycled fix (not continuous tracking) to conserve power; movement delta beyond threshold (default ~10 ft, tunable) triggers an alert.</td></tr>
+            <tr><td>Battery/solar monitor</td><td>Voltage + current sense on the charge controller</td><td>State-of-charge estimate reported on every heartbeat, not just on fault.</td></tr>
+            <tr><td>Alarm siren/strobe</td><td>12V actuator, controller-driven relay</td><td>Fires locally and immediately on <span class="mono">ALARM</span> entry — see Sec. 10 on the offline case.</td></tr>
+            <tr><td>Safety lighting</td><td>LED, dusk-to-dawn + motion-boosted</td><td>Largest single power draw in the budget (Sec. 06); dimmed baseline with a motion-triggered boost is the efficient default.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="lock">
+      <div class="block-tag"><span class="code">SPEC&#8209;04</span><h2>Lock integration</h2></div>
+      <p>The leading lock candidate is a standalone smart padlock — its own battery, its own Bluetooth/PIN access, no wired connection to the controller. That means "was this door opened with a valid code" can't be answered locally; it has to be answered by correlating two independent event streams at the backend.</p>
+      <div class="model-cards">
+        <div class="model-card recommended">
+          <h4>Model A — Cloud-correlated (default)</h4>
+          <ul>
+            <li>Lock reports unlock events to its own vendor cloud/API.</li>
+            <li>Controller reports the door-open sensor event independently.</li>
+            <li>Backend matches the two within a tolerance window (e.g. &plusmn;30s) to classify the open as authorized or not.</li>
+            <li>No new wiring; works with the current lock candidate as-is.</li>
+            <li>Risk: a connectivity outage on either side during the correlation window can misclassify — needs an explicit fallback rule (Sec. 10).</li>
+          </ul>
+        </div>
+        <div class="model-card">
+          <h4>Model B — Hardwired signal</h4>
+          <ul>
+            <li>Lock exposes a dry-contact or GPIO output on valid code entry, wired directly to the controller.</li>
+            <li>Instant local correlation, no network round-trip, works fully offline.</li>
+            <li>Requires different lock hardware — most standalone battery smart padlocks, including the current candidate, don't expose a wired output. This means swapping to an integrated electronic deadbolt/strike.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Default to Model A given the current hardware candidate. Revisit Model B only if the lock hardware choice changes toward an integrated (wired) unit — this is one of the open items in Sec. 12.</p>
+    </section>
+
+    <section class="block" id="camera">
+      <div class="block-tag"><span class="code">SPEC&#8209;05</span><h2>Camera subsystem</h2></div>
+      <p>The camera candidate is a self-contained cellular PTZ unit with its own SIM and its own vendor cloud — architecturally independent of the controller, the same way the lock is.</p>
+      <h3>Integration approach</h3>
+      <div class="model-cards">
+        <div class="model-card recommended">
+          <h4>Relay through backend media server</h4>
+          <ul>
+            <li>Backend authenticates to the camera vendor's API with service credentials, pulls the stream, re-serves it to viewers through the platform's own media server (e.g. an RTSP/WebRTC relay).</li>
+            <li>Full control over concurrent-viewer scaling and over the PTZ control-arbitration queue (token-based lock, TTL, preemption on a new request).</li>
+            <li>Adds real infrastructure to run and pay for — cost and bandwidth scale with concurrent viewers.</li>
+          </ul>
+        </div>
+        <div class="model-card">
+          <h4>Embed vendor's viewing widget</h4>
+          <ul>
+            <li>Lower engineering lift — no media server to run.</li>
+            <li>Limited or no control over PTZ arbitration behavior; tied to whatever the vendor's SDK/widget supports.</li>
+          </ul>
+        </div>
+      </div>
+      <p>The relay approach is the only one that supports true first-come-first-served PTZ arbitration with a hard cutoff when another viewer requests control — recommended default, contingent on confirming the camera vendor exposes an API suitable for relaying (Sec. 12).</p>
+    </section>
+
+    <section class="block" id="power">
+      <div class="block-tag"><span class="code">SPEC&#8209;06</span><h2>Power budget</h2></div>
+      <p>Illustrative first pass, not final — real component datasheets are needed to lock these numbers (Sec. 12). Purpose here is to establish the shape of the budget and which component dominates it.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Component</th><th class="num">Quiescent</th><th class="num">Peak</th><th>Duty cycle</th><th class="num">Avg. daily draw</th></tr></thead>
+          <tbody>
+            <tr><td>MCU / controller core</td><td class="num">40 mA</td><td class="num">80 mA</td><td>100%</td><td class="num">~960 mAh</td></tr>
+            <tr><td>Door / motion / tamper sensors</td><td class="num">2 mA</td><td class="num">5 mA</td><td>100%</td><td class="num">~48 mAh</td></tr>
+            <tr><td>Smoke / heat sensor</td><td class="num">3 mA</td><td class="num">3 mA</td><td>100%</td><td class="num">~72 mAh</td></tr>
+            <tr><td>GPS module</td><td class="num">25 mA</td><td class="num">45 mA</td><td>~10% (periodic fix)</td><td class="num">~108 mAh</td></tr>
+            <tr><td>Cellular modem (LTE-M/NB-IoT)</td><td class="num">5 mA</td><td class="num">250 mA</td><td>~2% (TX bursts)</td><td class="num">~150 mAh</td></tr>
+            <tr><td>Siren / strobe</td><td class="num">0 mA</td><td class="num">500 mA</td><td>&lt;1% (alarm events only)</td><td class="num">~5 mAh</td></tr>
+            <tr><td>Safety lighting (LED)</td><td class="num">0 mA</td><td class="num">300 mA</td><td>~35% (nighttime, dimmed baseline)</td><td class="num">~2500 mAh</td></tr>
+            <tr><td>Charge controller overhead</td><td class="num">5 mA</td><td class="num">10 mA</td><td>100%</td><td class="num">~120 mAh</td></tr>
+            <tr class="total"><td>Total (lighting excluded)</td><td></td><td></td><td></td><td class="num">~1,463 mAh/day</td></tr>
+            <tr class="total"><td>Total (lighting included)</td><td></td><td></td><td></td><td class="num">~3,963 mAh/day</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Safety lighting dominates the budget by a wide margin — worth treating as its own line item when sizing solar/battery per site, and worth revisiting the dusk-to-dawn baseline (motion-boosted only, no baseline glow) as a lower-power alternative if a site's sun exposure is marginal.</p>
+      <h4>Sizing formula</h4>
+      <p>Battery capacity (Ah) &ge; daily draw (Ah) &times; autonomy days &divide; usable depth-of-discharge. Example at 3 days of no-sun autonomy, 80% usable DoD on LiFePO4: 3.96&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>14.9 Ah minimum</strong> — round up for margin (e.g. 20 Ah). Solar panel sizing follows from daily Wh needed &divide; average peak sun hours for the install location &divide; system efficiency (~0.8 typical for charge-controller + wiring losses).</p>
+      <div class="callout"><strong>Battery chemistry:</strong> LiFePO4 recommended over other lithium chemistries for outdoor, unattended, thermally-exposed deployment — more stable under heat and vibration, safer failure mode.</div>
+    </section>
+
+    <section class="block" id="connectivity">
+      <div class="block-tag"><span class="code">SPEC&#8209;07</span><h2>Connectivity &amp; data budget</h2></div>
+      <p>Two very different connectivity profiles live on one site: the controller's telemetry is tiny and infrequent; the camera's video stream is not. Treating them as one connection would size the whole system for the camera's needs.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Link</th><th>Technology</th><th>Typical monthly data</th></tr></thead>
+          <tbody>
+            <tr><td>Controller telemetry</td><td>LTE-M or NB-IoT (low-power, low-bandwidth cellular)</td><td>Low — heartbeats and discrete events, well under 100&nbsp;MB/month</td></tr>
+            <tr><td>Camera stream</td><td>Standard LTE (own SIM, per Sec. 05)</td><td>High and viewer-dependent — scales with concurrent live viewers and PTZ session length; needs a real per-unit data plan estimate once viewer volume is modeled</td></tr>
+            <tr><td>Firmware OTA</td><td>Piggybacks on controller's LTE-M/NB-IoT link</td><td>Occasional spikes at update time; scheduled during low-activity windows</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Keeping the two links physically and contractually separate (different SIM, different plan) also means a camera data-plan overage on one unit can't starve that unit's alarm/lock reporting.</p>
+    </section>
+
+    <section class="block" id="backend">
+      <div class="block-tag"><span class="code">SPEC&#8209;08</span><h2>Backend architecture</h2></div>
+      <ul class="plain">
+        <li><strong>Ingestion:</strong> MQTT broker over TLS. Each controller publishes to a per-unit topic namespace (telemetry, discrete events) and subscribes to a command topic for remote arm/disarm or diagnostic requests.</li>
+        <li><strong>Device identity:</strong> per-controller certificate or unique API credential issued at commissioning (Sec. 11) — never a shared fleet-wide secret.</li>
+        <li><strong>Data model:</strong> time-series storage for continuous telemetry (battery %, heartbeat), a separate discrete event log for alerts (door-open, movement, fault, fire) — different query patterns, different retention needs.</li>
+        <li><strong>Alert rules engine:</strong> evaluates incoming events against the same conditions defined in the unit's state machine (Sec. 02) and dispatches notifications — this is the layer the door/lock correlation (Sec. 04) actually runs in.</li>
+        <li><strong>Command path:</strong> backend &rarr; controller over the same MQTT command topic, with a required acknowledgment; an un-acked command is treated as failed, not assumed delivered.</li>
+        <li><strong>OTA hosting:</strong> signed firmware images with staged rollout (a small cohort first) before fleet-wide push.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="security">
+      <div class="block-tag"><span class="code">SPEC&#8209;09</span><h2>Security model</h2></div>
+      <ul class="plain">
+        <li>TLS on every link — controller-to-broker, lock-vendor-to-backend, camera-to-backend.</li>
+        <li>Per-device unique credentials, individually revocable — pulling one compromised or decommissioned unit offline should never touch another unit's credentials.</li>
+        <li>Signed firmware images only; controller rejects an unsigned or improperly-signed OTA payload.</li>
+        <li>Rate limiting and anomaly detection on telemetry ingestion — a controller suddenly publishing far outside its normal pattern is itself a signal worth surfacing, not just the individual events.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="failure">
+      <div class="block-tag"><span class="code">SPEC&#8209;10</span><h2>Failure modes &amp; recovery</h2></div>
+      <ul class="plain">
+        <li><strong>Connectivity loss:</strong> local alarm/siren response never depends on the network — it fires from the controller's own state machine. Only the remote notification is best-effort; the physical response is not.</li>
+        <li><strong>Lock/door correlation during an outage (Sec. 04):</strong> if the door-open event arrives but no matching lock-unlock event has arrived within the tolerance window — including because the lock vendor's link is down — the default treats it as unauthorized and alerts. A late-arriving lock event after the alert has already fired should reconcile the record, not just get dropped.</li>
+        <li><strong>Battery depletion:</strong> a defined power-priority order — alarm and lock-correlation reporting outlast camera and safety lighting as the battery drops, rather than everything degrading uniformly and unpredictably.</li>
+        <li><strong>Firmware crash:</strong> hardware watchdog resets the MCU; state re-asserts from local flash rather than defaulting to an unarmed state.</li>
+        <li><strong>Tamper detected:</strong> always a local, immediate response regardless of network state — same principle as the alarm.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="commissioning">
+      <div class="block-tag"><span class="code">SPEC&#8209;11</span><h2>Provisioning &amp; commissioning</h2></div>
+      <ol class="plain">
+        <li>Mount controller, sensors, siren, and lighting in the unit; wire to the controller's GPIO/power bus.</li>
+        <li>Power up; controller runs its <span class="mono">BOOT</span> self-test.</li>
+        <li>Provision device identity — issue the unit's unique certificate/credential and register it with the backend.</li>
+        <li>Pair the standalone lock and register its vendor account/API access with the backend for correlation (Sec. 04).</li>
+        <li>Mount and register the cellular camera with the backend relay (Sec. 05).</li>
+        <li>Run an end-to-end self-test: trigger each sensor, confirm the alert reaches the backend, confirm a test lock event correlates correctly.</li>
+        <li>Mark commissioning complete; unit enters <span class="mono">ARMED_SETUP</span> for its first use.</li>
+      </ol>
+    </section>
+
+    <section class="block" id="open">
+      <div class="block-tag"><span class="code">SPEC&#8209;12</span><h2>Open engineering questions</h2></div>
+      <ul class="open-list">
+        <li class="open-item"><span class="mark">?</span><span><strong>Controller hardware SKU</strong><span class="note">MCU class is specified (Sec. 02); exact board/vendor not chosen.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Heartbeat interval</strong><span class="note">Trades battery life against how fast a lost-controller fault is detected — needs a number.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Lock/door correlation window</strong><span class="note">The &plusmn;30s tolerance in Sec. 04 is illustrative; needs tuning against real lock-vendor event latency.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Camera vendor API access</strong><span class="note">The relay approach (Sec. 05) assumes an API suitable for pulling and re-serving the stream — needs confirming against the actual camera vendor's offering.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Real component power draws</strong><span class="note">Sec. 06's budget is illustrative; needs real datasheet numbers once specific parts are chosen.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Depends on both the real power budget and the install site's actual sun-hour data.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>MQTT broker hosting</strong><span class="note">Self-hosted vs. a managed IoT platform (e.g. AWS IoT Core, Azure IoT Hub) — affects cost, ops burden, and vendor lock-in.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Cellular data plan costs</strong><span class="note">Both the low-bandwidth controller plan and the camera's viewer-dependent plan need real pricing once volumes are estimated.</span></span></li>
+      </ul>
+    </section>
+
+  </main>
+</div>
