@@ -531,11 +531,12 @@
       <li><a href="#money"><span class="n">08</span>Money &amp; payouts</a></li>
       <li><a href="#disputes"><span class="n">09</span>Disputes &amp; enforcement</a></li>
       <li><a href="#legal"><span class="n">10</span>Legal &amp; policy packet</a></li>
-      <li><a href="#ops"><span class="n">11</span>Operations &amp; forms</a></li>
-      <li><a href="#marketing"><span class="n">12</span>Go-to-market</a></li>
-      <li><a href="#i18n"><span class="n">13</span>Localization</a></li>
-      <li><a href="#tech"><span class="n">14</span>Technical direction</a></li>
-      <li><a href="#open"><span class="n">15</span>Open questions</a></li>
+      <li><a href="#verification"><span class="n">11</span>Identity &amp; contact verification</a></li>
+      <li><a href="#ops"><span class="n">12</span>Operations &amp; forms</a></li>
+      <li><a href="#marketing"><span class="n">13</span>Go-to-market</a></li>
+      <li><a href="#i18n"><span class="n">14</span>Localization</a></li>
+      <li><a href="#tech"><span class="n">15</span>Technical direction</a></li>
+      <li><a href="#open"><span class="n">16</span>Open questions</a></li>
     </ol>
   </nav>
 
@@ -829,8 +830,27 @@
       <p>Candidate clause language an attorney should review and adapt, not text to ship as-is: a <strong>no-reliance</strong> clause (bidder isn't relying on operator statements or images beyond their own judgment), a <strong>liquidated-damages</strong> clause tying the deposit to a reasonable estimate of default costs, an <strong>attorney's-fees</strong> clause for disputes, a <strong>limitation-of-liability</strong> cap, a <strong>right-to-refuse-service</strong> clause, and a <strong>time-is-of-the-essence</strong> clause covering payment and removal deadlines.</p>
     </section>
 
+    <section class="block" id="verification">
+      <div class="block-tag"><span class="code">SEC&#8209;11</span><h2>Identity &amp; contact verification</h2></div>
+      <p>Not one capability — each channel below needs a different approach, at a different cost and a different level of trust. <strong>Availability and pricing for each still need to be researched</strong>; nothing here is vendor-committed.</p>
+      <div class="table-wrap">
+        <table class="data compact">
+          <thead><tr><th>Channel</th><th>Approach</th></tr></thead>
+          <tbody>
+            <tr><td>Email</td><td>Confirmation link at registration &mdash; standard, effectively free.</td></tr>
+            <tr><td>Phone</td><td>SMS one-time code, via the same Twilio infrastructure already planned for auction alerts (Sec. 13).</td></tr>
+            <tr><td>Payment card</td><td>Not a separate build &mdash; Stripe validates the card (CVV + billing-address match) as part of authorizing the bidding deposit hold. Raw card numbers never touch platform servers.</td></tr>
+            <tr><td>Driver's license</td><td>Needs a third-party identity vendor (e.g. Stripe Identity, Persona) doing document-authenticity + selfie matching. Not a DMV lookup, and not free &mdash; a real per-check cost.</td></tr>
+            <tr><td>Home / business address</td><td>Standard services confirm an address is real and deliverable, not that this specific person lives there. True proof-of-residency is a bigger, rarer capability.</td></tr>
+            <tr><td>Vehicle plate</td><td>Not verification against a registry &mdash; logged as an extra field on the access log (Sec. 07) when a seller or buyer arrives for their setup/removal window.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout"><strong>Tradeoff:</strong> more verification means more friction for legitimate bidders and sellers, and more compliance surface &mdash; especially for the driver's-license path, which means handling government ID images and should never be stored on platform servers directly, only passed through to the verification vendor with the result kept on file. Weigh each channel against what the bidding, seller, and cleanup deposits already cover before requiring it.</div>
+    </section>
+
     <section class="block" id="ops">
-      <div class="block-tag"><span class="code">SEC&#8209;11</span><h2>Operations &amp; forms</h2></div>
+      <div class="block-tag"><span class="code">SEC&#8209;12</span><h2>Operations &amp; forms</h2></div>
       <p>The checklists and forms staff actually run day to day — an inventory to build out, not yet written.</p>
       <h3>Checklists</h3>
       <ul class="plain">
@@ -860,7 +880,7 @@
     </section>
 
     <section class="block" id="marketing">
-      <div class="block-tag"><span class="code">SEC&#8209;12</span><h2>Go-to-market</h2></div>
+      <div class="block-tag"><span class="code">SEC&#8209;13</span><h2>Go-to-market</h2></div>
       <p>Channels to reach bidders and sellers once a facility is live — content to write per-launch, not part of the platform build itself.</p>
       <div class="chip-row">
         <span class="chip">Auction-site style ad template</span>
@@ -874,12 +894,12 @@
     </section>
 
     <section class="block" id="i18n">
-      <div class="block-tag"><span class="code">SEC&#8209;13</span><h2>Localization</h2></div>
+      <div class="block-tag"><span class="code">SEC&#8209;14</span><h2>Localization</h2></div>
       <p>Multi-language support is a stated goal. Practically this means building UI copy behind a translation layer from the start — even English-only at launch — rather than retrofitting it later, plus deciding how far translation reaches: interface chrome only, or also seller-written listing descriptions.</p>
     </section>
 
     <section class="block" id="tech">
-      <div class="block-tag"><span class="code">SEC&#8209;14</span><h2>Technical direction</h2></div>
+      <div class="block-tag"><span class="code">SEC&#8209;15</span><h2>Technical direction</h2></div>
       <p>The scale target — hundreds of concurrent users, dozens of listings running concurrently across different facilities — rules out the SQLite single-file prototype built earlier. That build is now a UI/interaction reference only; the data model needs facilities, units, camera and sensor devices, lock codes, time-windowed access states, and tax/premium/commission fields it doesn't have.</p>
       <ul class="plain">
         <li>Postgres with concurrency-safe bid transactions (row-level locking or serializable transactions on each bid write)</li>
@@ -896,7 +916,7 @@
     </section>
 
     <section class="block" id="open">
-      <div class="block-tag"><span class="code">SEC&#8209;15</span><h2>Open questions</h2></div>
+      <div class="block-tag"><span class="code">SEC&#8209;16</span><h2>Open questions</h2></div>
       <p>Items raised but not yet resolved — worth settling before locking the technical spec.</p>
       <ul class="open-list">
         <li class="open-item">
@@ -906,6 +926,10 @@
         <li class="open-item">
           <span class="mark">?</span>
           <span><strong>Hardware commitment</strong><span class="note">igloohome Padlock 2, Reolink Go PT Plus, and a Container One bolt-on lock box are the leading candidates (Sec. 06, 07), but nothing's finalized or purchased yet.</span></span>
+        </li>
+        <li class="open-item">
+          <span class="mark">?</span>
+          <span><strong>Verification vendor &amp; cost research</strong><span class="note">Sec. 11 lays out the approach per channel, but actual vendor selection and per-check pricing (identity verification, SMS OTP, address validation) still need research before deciding which channels ship at launch.</span></span>
         </li>
       </ul>
     </section>
