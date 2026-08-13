@@ -23,6 +23,7 @@
       <select id="role" name="role">
         <option value="bidder" <%= form.role === 'bidder' ? 'selected' : '' %>>Bid on sections</option>
         <option value="seller" <%= form.role === 'seller' ? 'selected' : '' %>>Sell sections</option>
+        <option value="facility" <%= form.role === 'facility' ? 'selected' : '' %>>Manage a facility</option>
       </select>
       <button type="submit" class="btn btn-full">Create Account</button>
     </form>

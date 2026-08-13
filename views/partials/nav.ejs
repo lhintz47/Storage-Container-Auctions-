@@ -8,6 +8,7 @@
       <% if (currentUser) { %>
         <a href="/sell">Sell a Section</a>
         <a href="/dashboard">Dashboard</a>
+        <a href="/forms">Forms</a>
         <span class="nav-user">Hi, <%= currentUser.name.split(' ')[0] %></span>
         <form action="/logout" method="POST" class="inline-form">
           <button type="submit" class="link-btn">Sign Out</button>

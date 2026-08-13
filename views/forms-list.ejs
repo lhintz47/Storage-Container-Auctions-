@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/head') %>
+<body>
+<%- include('partials/nav') %>
+
+<section class="container section">
+  <h1>Forms</h1>
+  <p class="hint">Available for your account type (<%= currentUser.role %>). Draft templates — the legally-reviewed tag means it still needs an attorney's sign-off before real-world use.</p>
+
+  <% if (myForms.length === 0) { %>
+    <p class="empty-state">No forms are available for your account type yet.</p>
+  <% } else { %>
+    <div class="forms-grid">
+      <% myForms.forEach(form => { %>
+        <a class="form-card" href="/forms/<%= form.id %>">
+          <span class="form-card-code"><%= form.code %></span>
+          <h3><%= form.title %></h3>
+          <p><%= form.summary %></p>
+          <% if (form.legalReview) { %><span class="chip-tag">Needs attorney review</span><% } %>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>
+</body>
+</html>

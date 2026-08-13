@@ -6,6 +6,7 @@ const { body, validationResult } = require('express-validator');
 
 const users = require('./src/users');
 const auctions = require('./src/auctions');
+const forms = require('./src/forms');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -125,7 +126,7 @@ app.post(
       name: req.body.name,
       email: req.body.email,
       password: req.body.password,
-      role: req.body.role === 'seller' ? 'seller' : 'bidder',
+      role: ['seller', 'facility'].includes(req.body.role) ? req.body.role : 'bidder',
     });
     req.session.userId = user.id;
     setFlash(req, 'success', `Welcome to Container Auctions, ${user.name}!`);
@@ -204,6 +205,25 @@ app.post(
     res.redirect('/auctions/' + id);
   }
 );
+
+// ---------- Forms (role-gated: bidder / seller / facility) ----------
+
+app.get('/forms', requireAuth, (req, res) => {
+  res.render('forms-list', {
+    title: 'Forms',
+    myForms: forms.getFormsForRole(res.locals.currentUser.role),
+  });
+});
+
+app.get('/forms/:id', requireAuth, (req, res) => {
+  const form = forms.getForm(req.params.id);
+  if (!form) return res.status(404).render('404', { title: 'Not Found' });
+  if (!forms.canAccess(form, res.locals.currentUser.role)) {
+    setFlash(req, 'error', "That form isn't available for your account type.");
+    return res.redirect('/forms');
+  }
+  res.render('form-detail', { title: form.title, form });
+});
 
 // ---------- API (for live countdown / price polling) ----------
 

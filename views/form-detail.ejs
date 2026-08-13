@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/head') %>
+<body>
+<%- include('partials/nav') %>
+
+<section class="container section">
+  <a href="/forms" class="back-link">&larr; Back to Forms</a>
+
+  <div class="form-sheet">
+    <div class="form-sheet-head">
+      <span class="form-card-code"><%= form.code %></span>
+      <% if (form.legalReview) { %><span class="chip-tag">Needs attorney review before use as a binding document</span><% } %>
+    </div>
+    <h1><%= form.title %></h1>
+
+    <%- form.bodyHtml %>
+
+    <div class="sig-block">
+      <div class="sig-line"><span class="line"></span><span class="sig-label">Signature</span></div>
+      <div class="sig-line"><span class="line"></span><span class="sig-label">Printed Name</span></div>
+      <div class="sig-line short"><span class="line"></span><span class="sig-label">Date</span></div>
+    </div>
+  </div>
+
+  <button class="btn btn-print no-print" onclick="window.print()">Print this form</button>
+</section>
+
+<%- include('partials/footer') %>
+</body>
+</html>
