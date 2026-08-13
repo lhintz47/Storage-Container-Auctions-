@@ -1,0 +1,914 @@
+<title>Container Auctions Plan</title>
+<style>
+  :root {
+    --paper: #eef1ef;
+    --paper-raised: #ffffff;
+    --paper-sunken: #e3e8e5;
+    --ink: #12181b;
+    --ink-muted: #526066;
+    --ink-faint: #7c8a8f;
+    --line: #d3dad4;
+    --line-strong: #b7c0ba;
+    --accent: #d9631e;
+    --accent-ink: #ffffff;
+    --accent2: #1f6f63;
+    --accent2-ink: #ffffff;
+    --money: #93650a;
+    --money-bg: #f3e6ce;
+    --open: #a13a3a;
+    --open-bg: #f6e3e0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12181a;
+      --paper-raised: #1a2124;
+      --paper-sunken: #0d1213;
+      --ink: #eae7df;
+      --ink-muted: #9caaad;
+      --ink-faint: #6d7a7d;
+      --line: #2a3336;
+      --line-strong: #3c474a;
+      --accent: #f0813f;
+      --accent-ink: #14181a;
+      --accent2: #45a897;
+      --accent2-ink: #0d1717;
+      --money: #dcab52;
+      --money-bg: #2b2413;
+      --open: #e08484;
+      --open-bg: #2e1c1c;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #12181a;
+    --paper-raised: #1a2124;
+    --paper-sunken: #0d1213;
+    --ink: #eae7df;
+    --ink-muted: #9caaad;
+    --ink-faint: #6d7a7d;
+    --line: #2a3336;
+    --line-strong: #3c474a;
+    --accent: #f0813f;
+    --accent-ink: #14181a;
+    --accent2: #45a897;
+    --accent2-ink: #0d1717;
+    --money: #dcab52;
+    --money-bg: #2b2413;
+    --open: #e08484;
+    --open-bg: #2e1c1c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .head-sans {
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  a { color: var(--accent2); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- Manifest header ---------- */
+
+  .manifest-head {
+    background: var(--paper-sunken);
+    border-bottom: 1px solid var(--line-strong);
+    padding: 2.6rem 1.5rem 1.8rem;
+  }
+
+  .manifest-inner { max-width: 980px; margin: 0 auto; }
+
+  .stamp-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .stamp-row .doc-code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+
+  h1.title {
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    margin: 0 0 0.3rem;
+    text-wrap: balance;
+  }
+
+  .subhead {
+    color: var(--ink-muted);
+    font-size: 1.05rem;
+    max-width: 62ch;
+    margin: 0 0 1.6rem;
+  }
+
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--line-strong);
+    border: 1px solid var(--line-strong);
+  }
+
+  .stat-cell {
+    background: var(--paper-raised);
+    padding: 0.7rem 0.9rem;
+  }
+
+  .stat-cell .k {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .stat-cell .v {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  /* ---------- Page layout ---------- */
+
+  .page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 2.4rem 1.5rem 5rem;
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 2.8rem;
+    align-items: start;
+  }
+
+  nav.toc {
+    position: sticky;
+    top: 1.6rem;
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 0.82rem;
+  }
+
+  nav.toc .toc-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+    margin-bottom: 0.7rem;
+    display: block;
+  }
+
+  nav.toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--line);
+  }
+
+  nav.toc li { margin: 0; }
+
+  nav.toc a {
+    display: block;
+    padding: 0.32rem 0 0.32rem 0.8rem;
+    margin-left: -2px;
+    border-left: 2px solid transparent;
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+
+  nav.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  nav.toc .n { color: var(--ink-faint); margin-right: 0.35em; }
+
+  main { min-width: 0; }
+
+  section.block {
+    margin-bottom: 3rem;
+    scroll-margin-top: 1.5rem;
+  }
+
+  .block-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .block-tag .code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+  }
+
+  h2 {
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-size: 1.15rem;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ink-muted);
+    margin: 1.4rem 0 0.5rem;
+  }
+
+  p { max-width: 66ch; margin: 0 0 0.9rem; }
+  .block > p:first-of-type { margin-top: 0; }
+
+  ul.plain, ol.plain { max-width: 66ch; padding-left: 1.2rem; margin: 0 0 0.9rem; }
+  ul.plain li, ol.plain li { margin-bottom: 0.35rem; }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--paper-raised);
+    padding: 0.75rem 1rem;
+    max-width: 62ch;
+    font-size: 0.92rem;
+    margin: 0.9rem 0;
+  }
+  .callout strong { color: var(--accent); }
+
+  /* ---------- Roles table ---------- */
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line-strong); margin-bottom: 0.9rem; }
+
+  table.data {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 720px;
+    font-size: 0.88rem;
+  }
+
+  table.data th, table.data td {
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  table.data th:last-child, table.data td:last-child { border-right: none; }
+
+  table.data thead th {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    background: var(--paper-sunken);
+    color: var(--ink-muted);
+  }
+
+  table.data tbody th {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    font-weight: 700;
+    background: var(--paper-sunken);
+    white-space: nowrap;
+  }
+
+  table.data tbody tr:last-child td, table.data tbody tr:last-child th { border-bottom: none; }
+
+  table.data.compact { min-width: 560px; }
+
+  /* ---------- Unit grid (facility floor plan) ---------- */
+
+  .unit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem;
+    max-width: 560px;
+    margin: 1rem 0 1.2rem;
+  }
+
+  .unit-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line-strong);
+    border-top: 3px solid var(--accent2);
+    padding: 0.85rem 1rem;
+  }
+
+  .unit-card .unit-letter {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .unit-card .unit-dims {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.02rem;
+  }
+
+  .unit-card .unit-sqft { color: var(--ink-muted); font-size: 0.84rem; }
+
+  .pad-specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--line-strong);
+    border: 1px solid var(--line-strong);
+    max-width: 560px;
+    margin: 0.4rem 0 1.1rem;
+  }
+  .pad-specs .stat-cell { background: var(--paper-raised); }
+
+  /* ---------- Timeline ---------- */
+
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    border-left: 3px solid var(--line-strong);
+    margin: 1rem 0 0.5rem;
+    max-width: 66ch;
+  }
+
+  .tl-step {
+    position: relative;
+    padding: 0 0 1.6rem 1.3rem;
+  }
+  .tl-step:last-child { padding-bottom: 0; }
+
+  .tl-step::before {
+    content: "";
+    position: absolute;
+    left: -8.5px;
+    top: 0.15rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--paper);
+    border: 3px solid var(--accent2);
+  }
+
+  .tl-step.live::before { border-color: var(--accent); }
+
+  .tl-when {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .tl-title {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 0.98rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .tl-desc { color: var(--ink-muted); font-size: 0.9rem; max-width: 58ch; }
+
+  /* ---------- Chips / tags ---------- */
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.6rem 0 1rem; }
+
+  .chip {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.28rem 0.65rem;
+    border-radius: 2px;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-raised);
+    color: var(--ink-muted);
+  }
+
+  .chip.accent2 { border-color: var(--accent2); color: var(--accent2); }
+  .chip.money { border-color: var(--money); color: var(--money); background: var(--money-bg); }
+
+  /* ---------- Open questions ---------- */
+
+  .open-list { list-style: none; padding: 0; margin: 0.8rem 0 0; max-width: 68ch; }
+
+  .open-item {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 0.5rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+  }
+  .open-item:last-child { border-bottom: none; }
+
+  .open-item .mark {
+    color: var(--open);
+    background: var(--open-bg);
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 0.72rem;
+    text-align: center;
+    border-radius: 2px;
+    padding: 0.15rem 0;
+    height: fit-content;
+  }
+
+  .open-item strong { display: block; margin-bottom: 0.1rem; }
+  .open-item span.note { color: var(--ink-muted); font-size: 0.88rem; }
+
+  /* ---------- Camera diagram ---------- */
+
+  .cam-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    margin: 1rem 0 0.5rem;
+  }
+
+  .cam-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line-strong);
+    padding: 1rem 1.1rem;
+  }
+
+  .cam-card h4 {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .cam-card.interior h4 { color: var(--accent); }
+  .cam-card.exterior h4 { color: var(--accent2); }
+
+  .cam-card ul { margin: 0; padding-left: 1.1rem; font-size: 0.88rem; }
+  .cam-card li { margin-bottom: 0.3rem; }
+
+  @media (max-width: 720px) {
+    .page { grid-template-columns: 1fr; }
+    nav.toc { position: static; border-bottom: 1px solid var(--line); padding-bottom: 1rem; margin-bottom: 0.5rem; }
+    nav.toc ol { columns: 2; border-left: none; }
+    nav.toc a { border-left: none; padding-left: 0; }
+    .cam-split { grid-template-columns: 1fr; }
+    table.roles { min-width: 600px; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    a, .chip { transition: color 0.12s ease, border-color 0.12s ease; }
+  }
+</style>
+
+<div class="manifest-head">
+  <div class="manifest-inner">
+    <div class="stamp-row">
+      <span class="doc-code">MANIFEST // CNTR-AUCTION-PLATFORM</span>
+      <span class="doc-code">STATUS: PLANNING</span>
+    </div>
+    <h1 class="title">Container Auctions — Product Plan</h1>
+    <p class="subhead">A public marketplace for auctioning the contents of sealed 10&thinsp;&times;&thinsp;8 ft shipping&#8209;container sections — storage-auction rules, real escrow, remote-controllable inspection cameras, and smart-lock access on a one-week clock.</p>
+    <div class="stat-strip">
+      <div class="stat-cell"><span class="k">Facility unit</span><span class="v">4 &times; 10&thinsp;&times;&thinsp;8 ft bays / 320 sq ft</span></div>
+      <div class="stat-cell"><span class="k">Auction format</span><span class="v">Rising bid + seller-accepted buy-it-now</span></div>
+      <div class="stat-cell"><span class="k">Launch market</span><span class="v">Sacramento, CA area</span></div>
+      <div class="stat-cell"><span class="k">Target scale</span><span class="v">100s of concurrent users, multi-facility</span></div>
+      <div class="stat-cell"><span class="k">Turnaround target</span><span class="v">~1 week per listing</span></div>
+      <div class="stat-cell"><span class="k">Payments</span><span class="v">Demo ledger now &rarr; Stripe Connect later</span></div>
+      <div class="stat-cell"><span class="k">Revenue</span><span class="v">15% buyer's premium + 10% seller commission</span></div>
+      <div class="stat-cell"><span class="k">Localization</span><span class="v">Multi-language, planned</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <nav class="toc" aria-label="Sections">
+    <span class="toc-label">Contents</span>
+    <ol>
+      <li><a href="#roles"><span class="n">01</span>Roles</a></li>
+      <li><a href="#facility"><span class="n">02</span>Facility &amp; units</a></li>
+      <li><a href="#intake"><span class="n">03</span>Seller intake</a></li>
+      <li><a href="#lifecycle"><span class="n">04</span>Lifecycle</a></li>
+      <li><a href="#deposit"><span class="n">05</span>Bidding deposit</a></li>
+      <li><a href="#monitoring"><span class="n">06</span>Monitoring &amp; safety</a></li>
+      <li><a href="#access"><span class="n">07</span>Unit access</a></li>
+      <li><a href="#money"><span class="n">08</span>Money &amp; payouts</a></li>
+      <li><a href="#disputes"><span class="n">09</span>Disputes &amp; enforcement</a></li>
+      <li><a href="#legal"><span class="n">10</span>Legal &amp; policy packet</a></li>
+      <li><a href="#ops"><span class="n">11</span>Operations &amp; forms</a></li>
+      <li><a href="#marketing"><span class="n">12</span>Go-to-market</a></li>
+      <li><a href="#i18n"><span class="n">13</span>Localization</a></li>
+      <li><a href="#tech"><span class="n">14</span>Technical direction</a></li>
+      <li><a href="#open"><span class="n">15</span>Open questions</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section class="block" id="roles">
+      <div class="block-tag"><span class="code">SEC&#8209;01</span><h2>Roles</h2></div>
+      <p>Four parties, and a seller and facility owner can be the same entity — a facility can auction its own abandoned sections, or independent sellers can rent space to list theirs.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th>Role</th><th>Lists sections</th><th>Bids</th><th>Camera access</th><th>Access code</th><th>Money</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Bidder / Buyer</th>
+              <td>—</td>
+              <td>After posting the platform-wide bidding deposit</td>
+              <td>Interior: live view + PTZ queue</td>
+              <td>Buyer code, active during their removal window</td>
+              <td>Pays winning bid + cleaning deposit</td>
+            </tr>
+            <tr>
+              <th scope="row">Seller</th>
+              <td>Yes</td>
+              <td>Cannot bid on own listing</td>
+              <td>Exterior: security feed</td>
+              <td>Seller code, active during setup window</td>
+              <td>Payout minus platform commission</td>
+            </tr>
+            <tr>
+              <th scope="row">Facility Owner</th>
+              <td>Yes, on their own facility</td>
+              <td>Cannot bid on sections they host</td>
+              <td>Exterior: security feed, all sections at their facility</td>
+              <td>Facility manager code, persistent until staff change</td>
+              <td>Confirms condition; releases or forfeits cleaning deposit</td>
+            </tr>
+            <tr>
+              <th scope="row">Platform</th>
+              <td>—</td>
+              <td>—</td>
+              <td>Oversight, all feeds</td>
+              <td>Infra admin, not a physical code</td>
+              <td>Holds deposits in escrow, takes commission, arbitrates</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="facility">
+      <div class="block-tag"><span class="code">SEC&#8209;02</span><h2>Facility &amp; units</h2></div>
+      <p>The standard deployment is one site built from <strong>four 10 &times; 8 ft auction units</strong> &mdash; 80 sq ft each, ~320 sq ft total. Each bay is a self-contained auction chamber: its own door, its own lock, its own unit number, its own camera and sensor coverage. A facility can run one four-unit block or several, but four bays is the repeatable building block the rest of the system (intake, monitoring, access) is designed around.</p>
+      <p>Units are <strong>relocatable shipping containers</strong>, not built-in bays — they can be redeployed between sites, which is why GPS/movement tracking (Sec. 06) is a standard fixture on every unit, not an optional add-on.</p>
+      <div class="unit-grid">
+        <div class="unit-card"><span class="unit-letter">Unit A</span><span class="unit-dims">10 &times; 8 ft</span><span class="unit-sqft">80 sq ft &middot; seller/auction unit</span></div>
+        <div class="unit-card"><span class="unit-letter">Unit B</span><span class="unit-dims">10 &times; 8 ft</span><span class="unit-sqft">80 sq ft &middot; seller/auction unit</span></div>
+        <div class="unit-card"><span class="unit-letter">Unit C</span><span class="unit-dims">10 &times; 8 ft</span><span class="unit-sqft">80 sq ft &middot; seller/auction unit</span></div>
+        <div class="unit-card"><span class="unit-letter">Unit D</span><span class="unit-dims">10 &times; 8 ft</span><span class="unit-sqft">80 sq ft &middot; seller/auction unit</span></div>
+      </div>
+      <h3>Per-unit hardware baseline</h3>
+      <ul class="plain">
+        <li>Separate roll-up or swing door with its own lock/smart-access point</li>
+        <li>Individual unit number, referenced on the listing and every access code</li>
+        <li>Interior lighting and interior camera coverage</li>
+        <li>Door-open sensor and fire/smoke/heat monitoring</li>
+        <li>Tamper seal or digital access log</li>
+        <li>Dedicated, solar-powered controller per unit running its alarm and safety-lighting system, with self-monitoring and fault reporting</li>
+      </ul>
+      <h3>Site preparation</h3>
+      <p>Each four-unit block needs a level, well-drained pad &mdash; compacted gravel, reinforced concrete, or prepared asphalt &mdash; sloped away from the doors, with clear access for seller drop-off, buyer pickup, and emergency response.</p>
+      <div class="pad-specs">
+        <div class="stat-cell"><span class="k">Minimum pad</span><span class="v">40 ft wide &times; 25&ndash;30 ft deep</span></div>
+        <div class="stat-cell"><span class="k">Better working area</span><span class="v">45 ft wide &times; 35 ft deep</span></div>
+      </div>
+      <div class="callout"><strong>Site host pitch:</strong> a compact, controlled auction platform on a prepared pad, with defined access rules, security, camera monitoring, and fire-safety equipment &mdash; run without requiring full-time on-site staffing.</div>
+
+      <h3>Unit rotation</h3>
+      <p>Four bays run as a continuous cycle, not four one-off auctions. When Unit A sells and clears, contents shift down &mdash; B moves to A, C to B, D to C &mdash; and D is refilled with a new seller's items. Each bay is re-listed as soon as it's re-sealed, so the site stays at four live-or-filling auctions rather than sitting empty between sales.</p>
+    </section>
+
+    <section class="block" id="intake">
+      <div class="block-tag"><span class="code">SEC&#8209;03</span><h2>Seller intake</h2></div>
+      <p>Intake is the platform's first documentation point &mdash; what's proven here is what the auction listing, and later the condition dispute process, will rely on.</p>
+      <ol class="plain">
+        <li>Seller signs the auction agreement</li>
+        <li>Seller provides identification</li>
+        <li>Seller pays the required security deposit</li>
+        <li>Seller is assigned a specific unit (A&ndash;D at that site)</li>
+        <li>Seller places approved items inside; prohibited items are removed before lockup</li>
+        <li>Contents are photographed/recorded before the unit is sealed</li>
+        <li>Intake photos run through AI screening for prohibited items; any flag notifies the facility manager, who confirms it (seller removes the item) or overrides it as a false positive</li>
+        <li>Unit is locked and sealed once flags are cleared &mdash; this is what the auction listing is built from</li>
+        <li>Seller receives confirmation the unit is ready for auction</li>
+      </ol>
+      <div class="callout"><strong>After lockup:</strong> no one may add, remove, rearrange, or alter the contents without the operator's written approval &mdash; an explicit exception path, not an open door.</div>
+
+      <h3>Prohibited items (working list)</h3>
+      <p>Starter list, grouped by why each category is barred &mdash; yours to mark up before it goes into the seller agreement (Sec. 10):</p>
+      <ul class="plain">
+        <li><strong>Illegal / non-negotiable:</strong> firearms, ammunition, explosives, fireworks; illegal drugs or controlled substances; stolen property; property the seller doesn't have clear legal right to sell.</li>
+        <li><strong>Fire &amp; combustion risk:</strong> fuel (gasoline, diesel, kerosene); propane tanks or other compressed gas cylinders; loose or damaged large-format lithium battery packs; open flame devices or anything lit.</li>
+        <li><strong>Hazardous / biological:</strong> industrial chemicals, solvents, corrosives; biohazards, medical waste, human waste; live animals.</li>
+        <li><strong>Perishable / pest risk:</strong> open or perishable food; wet, moldy, or pest-infested items; anything with active odor or decay risk.</li>
+        <li><strong>Operational limits:</strong> items that don't fit through the unit door or exceed its weight/floor-load limit; items requiring power or refrigeration to stay safe.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="lifecycle">
+      <div class="block-tag"><span class="code">SEC&#8209;04</span><h2>Listing lifecycle</h2></div>
+      <p>Target is a one-week door-to-door cycle, fixed: setup and removal windows account for four of the seven days, leaving three days of live bidding — confirmed as the standard cycle rather than something that flexes per listing.</p>
+      <div class="timeline">
+        <div class="tl-step">
+          <span class="tl-when">Day 0&ndash;2</span>
+          <div class="tl-title">Setup window</div>
+          <div class="tl-desc">Seller fills the section. Seller access code is live. Exterior security camera runs continuously.</div>
+        </div>
+        <div class="tl-step live">
+          <span class="tl-when">Day 2&ndash;5 (approx.)</span>
+          <div class="tl-title">Auction is live</div>
+          <div class="tl-desc">Interior camera opens for bidder inspection. Bidding deposit required to place a bid. Seller may accept a buy-it-now at any point, closing the auction early.</div>
+        </div>
+        <div class="tl-step">
+          <span class="tl-when">Close</span>
+          <div class="tl-title">Auction ends</div>
+          <div class="tl-desc">Highest qualifying bid wins (or buy-it-now accepted). Winner is charged; cleaning/removal deposit is authorized. If no bid meets reserve, the seller's deposit covers cleanup and a no-sale use fee may apply (Sec. 08).</div>
+        </div>
+        <div class="tl-step">
+          <span class="tl-when">Day 5&ndash;7 (approx.)</span>
+          <div class="tl-title">Removal window</div>
+          <div class="tl-desc">Buyer access code goes live for two days to clear the section.</div>
+        </div>
+        <div class="tl-step">
+          <span class="tl-when">After removal</span>
+          <div class="tl-title">Close-out</div>
+          <div class="tl-desc">Facility manager confirms condition. Cleaning deposit refunds or is forfeited. Seller payout releases minus commission.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="deposit">
+      <div class="block-tag"><span class="code">SEC&#8209;05</span><h2>Bidding deposit</h2></div>
+      <p>A single flat, refundable deposit unlocks bidding across the whole platform — not set per listing, and not controlled by the seller. Modeled as an authorization hold: placed once when a bidder wants to start bidding, released if they never win, and drawn on if they win and don't complete payment.</p>
+    </section>
+
+    <section class="block" id="monitoring">
+      <div class="block-tag"><span class="code">SEC&#8209;06</span><h2>Monitoring &amp; safety</h2></div>
+      <p>Two independent camera systems per unit, planned against generic ONVIF/RTSP so no single vendor is load-bearing — plus a sensor layer that runs regardless of who's watching.</p>
+      <div class="callout"><strong>Leading hardware candidate:</strong> Reolink Go PT Plus &mdash; 4G LTE, 5MP, 355&deg; pan / 140&deg; tilt, battery/solar powered. Fits sites with no wifi or grid power, which most auction pads will be. Not yet a locked commitment &mdash; see Open Questions.</div>
+      <div class="cam-split">
+        <div class="cam-card interior">
+          <h4>Interior — inspection</h4>
+          <ul>
+            <li>Live feed visible to all bidders</li>
+            <li>Pan/tilt/zoom control, first-come-first-served queue</li>
+            <li>A bidder's control turn is cut short once another bidder requests control</li>
+            <li>Feed becomes visible to everyone on the listing, publicly, whenever it's actively being controlled — no private inspection</li>
+          </ul>
+        </div>
+        <div class="cam-card exterior">
+          <h4>Exterior — security</h4>
+          <ul>
+            <li>Runs continuously through setup, auction, and removal</li>
+            <li>Visible to the seller and the facility owner only</li>
+            <li>Not part of the bidder-facing inspection experience</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Facility sensors</h3>
+      <div class="table-wrap">
+        <table class="data compact">
+          <thead><tr><th>Sensor</th><th>What it flags</th></tr></thead>
+          <tbody>
+            <tr><td>Door-open sensor</td><td>Unit opened outside an authorized access window</td></tr>
+            <tr><td>Motion detector</td><td>Activity inside a unit that should be locked and empty of people</td></tr>
+            <tr><td>Tamper alert</td><td>Interference with the lock or access hardware</td></tr>
+            <tr><td>Fire / smoke / heat sensor</td><td>Life-safety event — alerts the operator and, where connected, emergency services</td></tr>
+            <tr><td>GPS / movement tracker</td><td>Unauthorized relocation of a unit — standard on every container, since units are relocatable</td></tr>
+            <tr><td>Solar / battery monitor</td><td>Charge/power health of each container's dedicated solar controller</td></tr>
+            <tr><td>Controller fault / heartbeat</td><td>The unit's alarm-and-lighting controller reports an internal error, or stops reporting at all</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Every access event is logged, without exception — seller, buyer, and facility manager alike — along with every sensor trip and camera-control session, all written to a per-unit digital access log. That log is the audit trail the condition/deposit decisions and any dispute lean on, so it can't have gaps for any of the three access identities.</p>
+
+      <h3>AI-assisted prohibited-item screening</h3>
+      <p>The intake lockup photos (Sec. 03) run through computer vision before a unit is sealed. It's reliable for visually distinctive categories — firearms, propane tanks, fuel cans, obvious biohazard markers — and much weaker at categories that don't have a visual signature, like drugs or stolen goods. Because of that false-positive risk, it never auto-rejects: a flag notifies the facility manager, who either confirms it (seller removes the item before lockup) or overrides it as a false positive and lets lockup proceed. Same human-in-the-loop pattern as every other enforcement decision in this plan — the model flags, a person decides.</p>
+
+      <h3>Facility manager alerts</h3>
+      <p>Five events push an immediate notification to the facility manager, not just a log entry:</p>
+      <ul class="plain">
+        <li><strong>Door opened without a valid code</strong> — the door-open sensor trips but no seller, buyer, or manager code was used to unlock it. Treated as a break-in, not routine access.</li>
+        <li><strong>Movement beyond ~10 feet</strong> — the GPS/movement tracker reports displacement past that distance, flagging unauthorized relocation of a unit while it's in active use. Tight enough to catch a unit being dragged, lifted, or hitched almost immediately.</li>
+        <li><strong>Fire department code used</strong> — an emergency responder has accessed the unit (Sec. 07), which the manager needs to know about immediately regardless of whether they were the one who called it in.</li>
+        <li><strong>AI-flagged prohibited item</strong> — screening on the intake photos raised a flag; lockup is held until the manager confirms or overrides it.</li>
+        <li><strong>Container system fault</strong> — a unit's dedicated alarm/lighting controller reports an internal error (solar charge fault, alarm malfunction, light failure) or its heartbeat is lost entirely. A silent controller is treated as a fault, not assumed fine.</li>
+      </ul>
+
+      <h3>Fire &amp; life safety</h3>
+      <ul class="plain">
+        <li>One extinguisher near the access point, one near solar/battery equipment, one near the office/check-in area — spaced so no one walks far during pickup or inspection</li>
+        <li>Monthly extinguisher inspection log, with locations marked on the site map</li>
+        <li>Visible "Fire Extinguisher" signage at each unit</li>
+        <li>No smoking / no open flame policy, posted</li>
+        <li>Emergency contact signage</li>
+        <li>Basic spill / fuel / battery-fire response policy</li>
+        <li>Emergency access via the fire department code or key box (Sec. 07) for fire/police access</li>
+        <li>Clear, unobstructed access lanes to every unit</li>
+        <li>Prohibited-items policy enforced at intake (see Seller Intake)</li>
+      </ul>
+    </section>
+
+    <section class="block" id="access">
+      <div class="block-tag"><span class="code">SEC&#8209;07</span><h2>Unit access</h2></div>
+      <p>Access is open for the full window, not appointment-based — a seller can enter anytime during facility hours across their 2-day setup window, and a buyer the same across their 2-day removal window. No booking system needed for entry itself; the code's validity window is the only gate.</p>
+      <p>Each unit carries four independent, remotely updateable access identities, regardless of which hardware implements them (smart keypad, temporary code, lockbox backup, or operator-issued key):</p>
+      <ul class="plain">
+        <li><strong>Seller code</strong> — active for the two-day setup window, then rotated.</li>
+        <li><strong>Buyer code</strong> — active for the two-day removal window, then rotated.</li>
+        <li><strong>Facility manager code</strong> — persistent for oversight and emergency access, rotated whenever that facility's manager/staff assignment changes.</li>
+        <li><strong>Fire department code</strong> — persistent, for emergency responder entry independent of the manager's own code.</li>
+      </ul>
+      <p>Seller and buyer codes must change after every timed window closes — a code never remains valid past the access period it was issued for. A lockbox or operator-issued physical key is the manual fallback at sites without smart-lock hardware — including the fire department's, since a Knox-Box-style key rather than a digital code may be the more realistic option for emergency responders. This needs an access provider with a remote code-management API; plan against a generic interface, same approach as the cameras.</p>
+      <p>Every use of every code — seller, buyer, facility manager, or fire department — is written to the unit's access log (Sec. 06), and a fire department code being used pushes an immediate facility manager notification, the same as the break-in and movement alerts. None of the four is exempt from logging.</p>
+      <div class="callout"><strong>Leading hardware candidates:</strong> igloohome Padlock 2 for the code system &mdash; time-based PIN and Bluetooth access, IPX7-rated for outdoor use &mdash; paired with a Container One bolt-on lock box, a no-weld steel shroud that shields the padlock on a standard 20' or 40' container. Not yet a locked commitment &mdash; see Open Questions.</div>
+    </section>
+
+    <section class="block" id="money">
+      <div class="block-tag"><span class="code">SEC&#8209;08</span><h2>Money &amp; payouts</h2></div>
+      <div class="chip-row">
+        <span class="chip money">Bidding deposit</span>
+        <span class="chip money">Seller deposit</span>
+        <span class="chip money">Winning bid</span>
+        <span class="chip money">Buyer's premium</span>
+        <span class="chip money">Sales tax</span>
+        <span class="chip money">Buyer cleanup deposit</span>
+        <span class="chip money">No-sale use fee</span>
+        <span class="chip accent2">Seller payout</span>
+        <span class="chip">Platform commission</span>
+      </div>
+      <p>Three deposits, not one: the bidding deposit (Sec. 05, unlocks bidding platform-wide), a <strong>seller security deposit</strong>, required at intake for every listing, and the <strong>buyer cleanup/performance deposit</strong> authorized at purchase and released once the facility manager confirms the unit was cleared and left clean during the removal window.</p>
+      <p>The seller deposit isn't just damage protection — if a listing closes with no winning bid (Sec. 04's "ended" outcome), the deposit can be applied toward clearing the unit, and a separate <strong>no-sale use fee</strong> may apply to cover the bay having been occupied without a completed sale.</p>
+      <p>Revenue is two-sided, not a single commission: a <strong>15% buyer's premium</strong> is added on top of the winning bid and paid by the buyer, while a separate <strong>10% seller commission</strong> is deducted from the seller's payout. Worked example on a $1,000 winning bid: buyer pays a $150 premium ($1,150 subtotal before tax); seller's payout is reduced by a $100 commission, netting $900. Platform revenue on that sale: $250, before tax pass-through.</p>
+      <p>Real payments and escrow are required, with a demo mode for building and testing before real money is involved. The natural fit is <strong>Stripe Connect</strong>: the platform charges the bidder (bid + premium + tax), takes its commission out of the seller's side, and routes the remainder to the seller's or facility owner's connected bank account. All three deposit types use Stripe's authorize/capture/release holds. Live mode requires each seller and facility owner to complete identity verification with Stripe before they can receive a payout; demo mode runs the identical flow against sandbox keys with no real money movement, so the product can be fully tested first.</p>
+
+      <h3>Sales tax</h3>
+      <p>Tax applies to the winning bid and the buyer's premium together, collected at checkout alongside the payment. It needs to be tracked and held separately from operating funds, not commingled, and remitted through California's CDTFA on the required filing cadence (monthly or quarterly) for the initial Sacramento-area launch.</p>
+      <p>California sales tax isn't a single state-level rate — it's a combined rate of state, county, city, and sometimes special-district tax that varies by the exact address, and Sacramento city vs. unincorporated Sacramento County are not the same rate. So tax needs to be resolved <strong>per facility address</strong>, not per state, from day one — a lookup by address rather than a flat percentage. That structure also carries forward cleanly if the platform expands to other states later, since the same per-address resolution just adds more jurisdictions rather than needing rework.</p>
+
+      <div class="callout"><strong>If a buyer doesn't complete cleanout:</strong> the cleanup deposit is forfeited, additional cleanup charges may apply, and the buyer can be suspended from bidding on future auctions — formalized in Sec. 09.</div>
+      <p>Bidders pay by <strong>card or digital wallet</strong> (Apple Pay / Google Pay) — no bank/ACH, so deposit holds and payouts stay fast rather than waiting on bank clearing.</p>
+      <div class="callout"><strong>Open:</strong> sales tax rates still need per-jurisdiction configuration — see Open Questions.</div>
+    </section>
+
+    <section class="block" id="disputes">
+      <div class="block-tag"><span class="code">SEC&#8209;09</span><h2>Disputes &amp; enforcement</h2></div>
+      <p>The recurring disputes are predictable — "not as expected," "didn't know what was inside," "missed pickup," "deposit should be refunded" — so the response can be a fixed framework instead of a case-by-case negotiation: reference the signed agreement, stay factual, no negotiation unless the facts genuinely warrant it.</p>
+      <h3>Deposit refund rule</h3>
+      <p>The cleanup deposit refunds only when all three hold: full cleanout, no damage, completed within the removal window. Anything short of that is a documented forfeiture, not a judgment call made in the moment.</p>
+      <h3>Chargeback defense</h3>
+      <p>If a buyer disputes a payment, the evidence bundle is: the signed agreement, the listing as posted, the intake/lockup photos, and the unit's access log (Sec. 06) &mdash; the same audit trail the facility manager already relies on for the cleanup-deposit decision.</p>
+      <h3>Strike system</h3>
+      <p>No-shows, chargebacks, and problem behavior are tracked per bidder. One flagged issue draws a warning; a second results in a ban from future bidding — the same enforcement path referenced in the Money &amp; Payouts callout above.</p>
+    </section>
+
+    <section class="block" id="legal">
+      <div class="block-tag"><span class="code">SEC&#8209;10</span><h2>Legal &amp; policy packet</h2></div>
+      <p>The documents that actually govern deposits, fees, pickup, and liability — none drafted yet, and binding versions need attorney review before use. Listed in the order they should be written, since the first six control the deposit and fee mechanics already defined in this plan.</p>
+      <h3>Draft first — controls deposits, fees, liability</h3>
+      <ol class="plain">
+        <li><strong>Seller agreement</strong> — the contract signed at intake (Sec. 03)</li>
+        <li><strong>Bidder terms &amp; conditions</strong></li>
+        <li><strong>Buyer deposit / default policy</strong> — formalizes the cleanup-deposit forfeiture and suspension remedies in Sec. 09</li>
+        <li><strong>Seller security deposit policy</strong> — required for every listing (Sec. 03/08)</li>
+        <li><strong>Auction fee disclosure</strong> — buyer's premium, seller commission, deposits, tax, and any add-on charges, disclosed up front</li>
+        <li><strong>Release of liability</strong></li>
+      </ol>
+      <h3>Draft next</h3>
+      <ul class="plain">
+        <li>Abandoned / unpaid property handling</li>
+        <li>Dispute policy — formalizes Sec. 09</li>
+        <li>Access &amp; pickup rules</li>
+        <li>Camera / photo permission language — consent for the interior/exterior feeds in Sec. 06</li>
+        <li>SMS consent — required for any bidder text-alert program (see Go-to-market)</li>
+      </ul>
+      <h3>Assembly order</h3>
+      <p>When combined into one signed packet: cover page &rarr; auction terms &amp; conditions &rarr; bidder agreement &rarr; liability waiver &rarr; deposit &amp; cleanup policy &rarr; access &amp; security rules &rarr; SMS consent &rarr; signature page.</p>
+      <h3>Enforceability clauses to include</h3>
+      <p>Candidate clause language an attorney should review and adapt, not text to ship as-is: a <strong>no-reliance</strong> clause (bidder isn't relying on operator statements or images beyond their own judgment), a <strong>liquidated-damages</strong> clause tying the deposit to a reasonable estimate of default costs, an <strong>attorney's-fees</strong> clause for disputes, a <strong>limitation-of-liability</strong> cap, a <strong>right-to-refuse-service</strong> clause, and a <strong>time-is-of-the-essence</strong> clause covering payment and removal deadlines.</p>
+    </section>
+
+    <section class="block" id="ops">
+      <div class="block-tag"><span class="code">SEC&#8209;11</span><h2>Operations &amp; forms</h2></div>
+      <p>The checklists and forms staff actually run day to day — an inventory to build out, not yet written.</p>
+      <h3>Checklists</h3>
+      <ul class="plain">
+        <li>Auction timeline</li>
+        <li>Pre-auction checklist</li>
+        <li>Day-of-auction checklist</li>
+        <li>Post-auction checklist</li>
+        <li>Unpaid bidder procedure</li>
+        <li>Seller payout procedure</li>
+        <li>Fire extinguisher placement &amp; inspection checklist</li>
+      </ul>
+      <h3>Forms / PDFs</h3>
+      <ul class="plain">
+        <li>Bidder registration form</li>
+        <li>Seller agreement PDF</li>
+        <li>Buyer pickup release</li>
+        <li>Bidder deposit receipt</li>
+        <li>Seller deposit receipt</li>
+        <li>SMS text consent form</li>
+        <li>Auction terms packet</li>
+        <li>No-contact access instruction sheet</li>
+      </ul>
+      <h3>Weekly operating cycle</h3>
+      <p>One rhythm per bay, run continuously across all four units (Sec. 02): launch the auction and announce it; mid-cycle, refresh the listing and highlight standout items; on the final day, push an "ending soon" notice and monitor bidding; after close, collect payment, issue the buyer's access code, and track the pickup through to cleanout confirmation.</p>
+      <h3>Financial tracking</h3>
+      <p>Per-auction record needed for both accounting and dispute defense: date, unit, winning bid, buyer's premium, subtotal, sales tax, total collected, seller commission, seller payout, net profit. The dispute/strike log (Sec. 09) is a separate sheet: date, bidder, auction, issue type, description, resolution, deposit status, and warning/ban status.</p>
+    </section>
+
+    <section class="block" id="marketing">
+      <div class="block-tag"><span class="code">SEC&#8209;12</span><h2>Go-to-market</h2></div>
+      <p>Channels to reach bidders and sellers once a facility is live — content to write per-launch, not part of the platform build itself.</p>
+      <div class="chip-row">
+        <span class="chip">Auction-site style ad template</span>
+        <span class="chip">Facebook / OfferUp teaser</span>
+        <span class="chip">VIP buyer text alerts</span>
+        <span class="chip">Email blast</span>
+        <span class="chip">Local business flyer</span>
+        <span class="chip">QR-code auction signage</span>
+      </div>
+      <p>Text and email touch bidder deposits and PII, so both channels carry real compliance requirements, not just deliverability ones: SMS needs A2P&nbsp;10DLC registration for U.S. business messaging plus explicit opt-in with working opt-out/HELP keywords, and email needs permission-based sending with a visible unsubscribe link. Both should be logged against the bidder CRM record, alongside the SMS consent form from the legal packet.</p>
+    </section>
+
+    <section class="block" id="i18n">
+      <div class="block-tag"><span class="code">SEC&#8209;13</span><h2>Localization</h2></div>
+      <p>Multi-language support is a stated goal. Practically this means building UI copy behind a translation layer from the start — even English-only at launch — rather than retrofitting it later, plus deciding how far translation reaches: interface chrome only, or also seller-written listing descriptions.</p>
+    </section>
+
+    <section class="block" id="tech">
+      <div class="block-tag"><span class="code">SEC&#8209;14</span><h2>Technical direction</h2></div>
+      <p>The scale target — hundreds of concurrent users, dozens of listings running concurrently across different facilities — rules out the SQLite single-file prototype built earlier. That build is now a UI/interaction reference only; the data model needs facilities, units, camera and sensor devices, lock codes, time-windowed access states, and tax/premium/commission fields it doesn't have.</p>
+      <ul class="plain">
+        <li>Postgres with concurrency-safe bid transactions (row-level locking or serializable transactions on each bid write)</li>
+        <li>Real-time layer (websockets) for live price updates, countdown sync, and camera-control queue state</li>
+        <li>Object storage for listing photos; streaming infrastructure for camera feeds (WebRTC or similar for low-latency PTZ control)</li>
+        <li>Facility/unit hardware registry: each unit (site, bay letter) mapped to its lock, camera, and sensor device IDs</li>
+        <li>IoT ingestion + alerting pipeline for door/motion/tamper/fire/GPS/battery/controller events, routed to the operator — immediate push to the facility manager for a no-code door-open (break-in), an out-of-threshold movement event, or a per-container controller fault/lost-heartbeat (Sec. 06), and for fire events, flagged for emergency response</li>
+        <li>Computer-vision screening on intake photos (object detection tuned to the prohibited-items categories in Sec. 03), feeding the same facility-manager review queue as the other alerts — flag and hold for a human decision, never auto-reject</li>
+        <li>Smart-lock integration layer behind a generic interface (candidate: igloohome's API)</li>
+        <li>Payments module behind an interface: demo ledger implementation now, Stripe Connect implementation later — line items for winning bid, buyer's premium, sales tax (resolved per facility address, likely via a tax API such as Stripe Tax or Avalara rather than a hardcoded rate table), and seller commission</li>
+        <li>Bidder CRM: registration, deposit/payment history, SMS/email consent status, strike count</li>
+        <li>i18n framework wired in from the start, even before a second language ships</li>
+      </ul>
+    </section>
+
+    <section class="block" id="open">
+      <div class="block-tag"><span class="code">SEC&#8209;15</span><h2>Open questions</h2></div>
+      <p>Items raised but not yet resolved — worth settling before locking the technical spec.</p>
+      <ul class="open-list">
+        <li class="open-item">
+          <span class="mark">?</span>
+          <span><strong>Prohibited items list</strong><span class="note">A working draft now exists (Sec. 03) — still needs your final mark-up before it's copied into the seller agreement.</span></span>
+        </li>
+        <li class="open-item">
+          <span class="mark">?</span>
+          <span><strong>Hardware commitment</strong><span class="note">igloohome Padlock 2, Reolink Go PT Plus, and a Container One bolt-on lock box are the leading candidates (Sec. 06, 07), but nothing's finalized or purchased yet.</span></span>
+        </li>
+      </ul>
+    </section>
+
+  </main>
+</div>
