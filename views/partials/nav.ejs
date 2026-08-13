@@ -1,0 +1,26 @@
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a href="/" class="brand">
+      <span class="brand-mark">⬛</span> Container<span class="accent">Auctions</span>
+    </a>
+    <nav class="main-nav">
+      <a href="/">Browse</a>
+      <% if (currentUser) { %>
+        <a href="/sell">Sell a Section</a>
+        <a href="/dashboard">Dashboard</a>
+        <span class="nav-user">Hi, <%= currentUser.name.split(' ')[0] %></span>
+        <form action="/logout" method="POST" class="inline-form">
+          <button type="submit" class="link-btn">Sign Out</button>
+        </form>
+      <% } else { %>
+        <a href="/login">Sign In</a>
+        <a href="/register" class="btn btn-small">Register</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<% if (flash) { %>
+  <div class="flash flash-<%= flash.type %>">
+    <div class="container"><%= flash.message %></div>
+  </div>
+<% } %>

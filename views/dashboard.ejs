@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/head') %>
+<body>
+<%- include('partials/nav') %>
+
+<section class="container section">
+  <h1>My Dashboard</h1>
+
+  <h2 class="section-title">My Bids</h2>
+  <% if (myBids.length === 0) { %>
+    <p class="empty-state">You haven't bid on anything yet. <a href="/">Browse live auctions</a>.</p>
+  <% } else { %>
+    <div class="grid">
+      <% myBids.forEach(auction => { %>
+        <a class="auction-card" href="/auctions/<%= auction.id %>">
+          <div class="auction-card-img">
+            <%- include('partials/lot-image', { seed: auction.image_seed, label: auction.category }) %>
+            <span class="badge badge-<%= auction.status %>"><%= auction.status %></span>
+          </div>
+          <div class="auction-card-body">
+            <span class="eyebrow"><%= auction.category %></span>
+            <h3><%= auction.title %></h3>
+            <div class="auction-card-meta">
+              <div><span class="label">Your Max Bid</span><span class="price">$<%= auction.my_max_bid.toLocaleString() %></span></div>
+              <div><span class="label">Current</span><span class="price"><%= auction.winner_id === currentUser.id ? '🏆 Winning' : (auction.current_price > auction.my_max_bid ? 'Outbid' : '') %></span></div>
+            </div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <h2 class="section-title">Watchlist</h2>
+  <% if (watchlist.length === 0) { %>
+    <p class="empty-state">Your watchlist is empty.</p>
+  <% } else { %>
+    <div class="grid">
+      <% watchlist.forEach(auction => { %>
+        <%- include('partials/auction-card', { auction }) %>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <h2 class="section-title">My Listings</h2>
+  <% if (myListings.length === 0) { %>
+    <p class="empty-state">You haven't listed any sections yet. <a href="/sell">List one now</a>.</p>
+  <% } else { %>
+    <div class="grid">
+      <% myListings.forEach(auction => { %>
+        <%- include('partials/auction-card', { auction }) %>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>
+<script src="/js/countdown.js"></script>
+</body>
+</html>

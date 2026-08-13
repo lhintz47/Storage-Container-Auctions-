@@ -1,0 +1,25 @@
+<%
+// Deterministic color from seed string, rendered as a corrugated-container SVG placeholder.
+const _seed = (typeof seed !== 'undefined' && seed) ? String(seed) : 'default';
+let _hash = 0;
+for (let i = 0; i < _seed.length; i++) { _hash = (_hash * 31 + _seed.charCodeAt(i)) >>> 0; }
+const _hue = _hash % 360;
+const _label = (typeof label !== 'undefined' && label) ? label : '';
+const _initial = _label ? _label.trim().charAt(0).toUpperCase() : '#';
+%>
+<svg class="lot-image" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<%= _label %> container section">
+  <defs>
+    <linearGradient id="g<%= _hash %>" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="hsl(<%= _hue %>,45%,32%)" />
+      <stop offset="100%" stop-color="hsl(<%= _hue %>,50%,20%)" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="220" fill="url(#g<%= _hash %>)" />
+  <% for (let x = -10; x < 400; x += 18) { %>
+    <rect x="<%= x %>" y="0" width="9" height="220" fill="rgba(255,255,255,0.04)" />
+  <% } %>
+  <rect x="10" y="10" width="380" height="200" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3" rx="6" />
+  <circle cx="200" cy="110" r="46" fill="rgba(0,0,0,0.25)" />
+  <text x="200" y="128" font-family="'Arial Black', sans-serif" font-size="52" fill="rgba(255,255,255,0.85)" text-anchor="middle"><%= _initial %></text>
+  <text x="20" y="205" font-family="monospace" font-size="13" fill="rgba(255,255,255,0.55)">SEALED SECTION</text>
+</svg>

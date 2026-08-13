@@ -1,0 +1,17 @@
+<a class="auction-card" href="/auctions/<%= auction.id %>">
+  <div class="auction-card-img">
+    <%- include('lot-image', { seed: auction.image_seed, label: auction.category }) %>
+    <span class="badge badge-<%= auction.status %>"><%= auction.status === 'live' ? 'Live' : (auction.status === 'sold' ? 'Sold' : 'Ended') %></span>
+  </div>
+  <div class="auction-card-body">
+    <span class="eyebrow"><%= auction.category %> &middot; <%= auction.location %></span>
+    <h3><%= auction.title %></h3>
+    <div class="auction-card-meta">
+      <div>
+        <span class="label">Current Bid</span>
+        <span class="price">$<%= auction.current_price.toLocaleString() %></span>
+      </div>
+      <div class="countdown" data-end="<%= auction.end_time %>" data-status="<%= auction.status %>">--</div>
+    </div>
+  </div>
+</a>

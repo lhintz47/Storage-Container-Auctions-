@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/head') %>
+<body>
+<%- include('partials/nav') %>
+
+<section class="container section auth-section">
+  <div class="auth-card wide">
+    <h1>List a Container Section</h1>
+    <p class="hint">Describe exactly what's known about the sealed section. Buyers pay a premium for detail.</p>
+    <% if (errors.length) { %>
+      <ul class="form-error">
+        <% errors.forEach(e => { %><li><%= e.msg %></li><% }) %>
+      </ul>
+    <% } %>
+    <form action="/sell" method="POST" class="grid-form">
+      <div class="full">
+        <label for="title">Listing Title</label>
+        <input type="text" id="title" name="title" value="<%= form.title || '' %>" required />
+      </div>
+      <div class="full">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="4" required><%= form.description || '' %></textarea>
+      </div>
+      <div>
+        <label for="category">Category</label>
+        <input type="text" id="category" name="category" placeholder="e.g. Tools & Equipment" value="<%= form.category || '' %>" required />
+      </div>
+      <div>
+        <label for="location">Location (City, State)</label>
+        <input type="text" id="location" name="location" value="<%= form.location || '' %>" required />
+      </div>
+      <div>
+        <label for="facility">Facility Name</label>
+        <input type="text" id="facility" name="facility" value="<%= form.facility || '' %>" required />
+      </div>
+      <div>
+        <label for="container_code">Container Code</label>
+        <input type="text" id="container_code" name="container_code" placeholder="e.g. MSCU-774102-3" value="<%= form.container_code || '' %>" required />
+      </div>
+      <div>
+        <label for="section_number">Section Number</label>
+        <input type="number" id="section_number" name="section_number" min="1" value="<%= form.section_number || 1 %>" required />
+      </div>
+      <div>
+        <label for="starting_price">Starting Price ($)</label>
+        <input type="number" id="starting_price" name="starting_price" min="1" value="<%= form.starting_price || 500 %>" required />
+      </div>
+      <div>
+        <label for="bid_increment">Bid Increment ($)</label>
+        <input type="number" id="bid_increment" name="bid_increment" min="1" value="<%= form.bid_increment || 50 %>" required />
+      </div>
+      <div>
+        <label for="reserve_price">Reserve Price ($, optional)</label>
+        <input type="number" id="reserve_price" name="reserve_price" min="1" value="<%= form.reserve_price || '' %>" />
+      </div>
+      <div>
+        <label for="duration_hours">Auction Duration (hours)</label>
+        <input type="number" id="duration_hours" name="duration_hours" min="1" max="720" value="<%= form.duration_hours || 72 %>" required />
+      </div>
+      <div class="full">
+        <button type="submit" class="btn btn-full">Publish Auction</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
+</body>
+</html>

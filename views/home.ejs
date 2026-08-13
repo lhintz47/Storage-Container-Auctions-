@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/head') %>
+<body>
+<%- include('partials/nav') %>
+
+<section class="hero">
+  <div class="container hero-inner">
+    <h1>Bid on sealed 10' × 8' shipping container sections.</h1>
+    <p>Real auction-house rules, sealed lots, live countdowns. Every section is 10 feet wide by 8 feet tall — you're bidding on what's inside, sight partially unseen.</p>
+    <form class="hero-search" action="/" method="GET">
+      <input type="text" name="q" placeholder="Search by title, location, or category..." value="<%= query.q %>" />
+      <button type="submit" class="btn">Search</button>
+    </form>
+  </div>
+</section>
+
+<% if (endingSoon.length) { %>
+<section class="container section">
+  <h2 class="section-title">⏱ Ending Soon</h2>
+  <div class="grid">
+    <% endingSoon.forEach(auction => { %>
+      <%- include('partials/auction-card', { auction }) %>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+
+<section class="container section">
+  <div class="filters-row">
+    <h2 class="section-title">All Live Auctions</h2>
+    <form class="filters" action="/" method="GET">
+      <input type="hidden" name="q" value="<%= query.q %>" />
+      <select name="category" onchange="this.form.submit()">
+        <option value="">All categories</option>
+        <% categories.forEach(c => { %>
+          <option value="<%= c %>" <%= query.category === c ? 'selected' : '' %>><%= c %></option>
+        <% }) %>
+      </select>
+      <select name="sort" onchange="this.form.submit()">
+        <option value="ending_soon" <%= query.sort === 'ending_soon' ? 'selected' : '' %>>Ending Soon</option>
+        <option value="newest" <%= query.sort === 'newest' ? 'selected' : '' %>>Newest</option>
+        <option value="price_low" <%= query.sort === 'price_low' ? 'selected' : '' %>>Price: Low to High</option>
+        <option value="price_high" <%= query.sort === 'price_high' ? 'selected' : '' %>>Price: High to Low</option>
+      </select>
+    </form>
+  </div>
+
+  <% if (liveAuctions.length === 0) { %>
+    <p class="empty-state">No live auctions match your search right now.</p>
+  <% } else { %>
+    <div class="grid">
+      <% liveAuctions.forEach(auction => { %>
+        <%- include('partials/auction-card', { auction }) %>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>
+<script src="/js/countdown.js"></script>
+</body>
+</html>
