@@ -1,0 +1,364 @@
+<title>Container Auctions Funding Plan</title>
+<style>
+  :root {
+    --paper: #eef1ee;
+    --paper-raised: #ffffff;
+    --paper-sunken: #e2e8e2;
+    --ink: #131a14;
+    --ink-muted: #4d5c4f;
+    --ink-faint: #7c8c7e;
+    --line: #d0dad1;
+    --line-strong: #aebfb0;
+    --accent: #2f7a4f;
+    --accent-ink: #ffffff;
+    --accent2: #9c7a1f;
+    --accent2-ink: #ffffff;
+    --equity: #4a6fa5;
+    --equity-bg: #e3eaf3;
+    --revshare: #2f7a4f;
+    --revshare-bg: #e2f0e6;
+    --open: #a13a3a;
+    --open-bg: #f6e3e0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #111a12;
+      --paper-raised: #19241a;
+      --paper-sunken: #0d130d;
+      --ink: #e7ece7;
+      --ink-muted: #9bab9c;
+      --ink-faint: #6a7a6b;
+      --line: #263429;
+      --line-strong: #37493a;
+      --accent: #4fae76;
+      --accent-ink: #0d1a10;
+      --accent2: #d1ac4d;
+      --accent2-ink: #1a1408;
+      --equity: #7ea3d6;
+      --equity-bg: #1c2836;
+      --revshare: #4fae76;
+      --revshare-bg: #16281b;
+      --open: #e08484;
+      --open-bg: #2e1c1c;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #111a12;
+    --paper-raised: #19241a;
+    --paper-sunken: #0d130d;
+    --ink: #e7ece7;
+    --ink-muted: #9bab9c;
+    --ink-faint: #6a7a6b;
+    --line: #263429;
+    --line-strong: #37493a;
+    --accent: #4fae76;
+    --accent-ink: #0d1a10;
+    --accent2: #d1ac4d;
+    --accent2-ink: #1a1408;
+    --equity: #7ea3d6;
+    --equity-bg: #1c2836;
+    --revshare: #4fae76;
+    --revshare-bg: #16281b;
+    --open: #e08484;
+    --open-bg: #2e1c1c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+
+  .serif { font-family: Georgia, Cambria, "Times New Roman", serif; }
+  .mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+  a { color: var(--equity); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .manifest-head { background: var(--paper-sunken); border-bottom: 1px solid var(--line-strong); padding: 2.6rem 1.5rem 1.8rem; }
+  .manifest-inner { max-width: 1000px; margin: 0 auto; }
+  .stamp-row { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 1rem; margin-bottom: 0.6rem; }
+  .stamp-row .doc-code { font-family: ui-monospace, monospace; font-size: 0.76rem; letter-spacing: 0.08em; color: var(--ink-faint); text-transform: uppercase; }
+
+  h1.title { font-weight: 800; font-size: clamp(1.7rem, 3.2vw, 2.4rem); letter-spacing: 0.01em; margin: 0 0 0.3rem; text-wrap: balance; }
+  .subhead { color: var(--ink-muted); font-size: 1.02rem; max-width: 68ch; margin: 0 0 1.6rem; }
+
+  .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--line-strong); border: 1px solid var(--line-strong); }
+  .stat-cell { background: var(--paper-raised); padding: 0.7rem 0.9rem; }
+  .stat-cell .k { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); font-weight: 700; display: block; margin-bottom: 0.2rem; }
+  .stat-cell .v { font-weight: 700; font-size: 0.92rem; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 2.4rem 1.5rem 5rem; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 2.8rem; align-items: start; }
+
+  nav.toc { position: sticky; top: 1.6rem; font-size: 0.82rem; }
+  nav.toc .toc-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.66rem; font-weight: 700; color: var(--ink-faint); margin-bottom: 0.7rem; display: block; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
+  nav.toc a { display: block; padding: 0.32rem 0 0.32rem 0.8rem; margin-left: -2px; border-left: 2px solid transparent; color: var(--ink-muted); text-decoration: none; }
+  nav.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  nav.toc .n { color: var(--ink-faint); margin-right: 0.35em; font-family: ui-monospace, monospace; }
+
+  main { min-width: 0; }
+  section.block { margin-bottom: 3rem; scroll-margin-top: 1.5rem; }
+  .block-tag { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem; }
+  .block-tag .code { font-family: ui-monospace, monospace; font-size: 0.7rem; letter-spacing: 0.06em; background: var(--ink); color: var(--paper); padding: 0.2rem 0.5rem; border-radius: 2px; }
+
+  h2 { font-weight: 800; letter-spacing: 0.01em; font-size: 1.1rem; margin: 0; text-wrap: balance; }
+  h3 { font-weight: 700; font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-muted); margin: 1.5rem 0 0.6rem; }
+  h4 { font-weight: 700; font-size: 0.86rem; margin: 1.1rem 0 0.4rem; }
+
+  p { max-width: 72ch; margin: 0 0 0.9rem; }
+  .block > p:first-of-type { margin-top: 0; }
+  ul.plain, ol.plain { max-width: 72ch; padding-left: 1.2rem; margin: 0 0 0.9rem; }
+  ul.plain li, ol.plain li { margin-bottom: 0.4rem; }
+
+  .callout { border-left: 3px solid var(--accent); background: var(--paper-raised); padding: 0.75rem 1rem; max-width: 68ch; font-size: 0.9rem; margin: 0.9rem 0; }
+  .callout strong { color: var(--accent); }
+  .callout.info { border-left-color: var(--equity); }
+  .callout.info strong { color: var(--equity); }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line-strong); margin-bottom: 0.9rem; }
+  table.data { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.85rem; }
+  table.data th, table.data td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0.55rem 0.75rem; text-align: left; vertical-align: top; }
+  table.data th:last-child, table.data td:last-child { border-right: none; }
+  table.data thead th { text-transform: uppercase; font-size: 0.66rem; letter-spacing: 0.06em; background: var(--paper-sunken); color: var(--ink-muted); }
+  table.data tbody tr:last-child td { border-bottom: none; }
+  table.data td.num, table.data th.num { font-family: ui-monospace, monospace; text-align: right; }
+  table.data tr.total td { font-weight: 700; background: var(--paper-sunken); }
+
+  .model-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin: 1rem 0 0.5rem; }
+  .model-card { background: var(--paper-raised); border: 1px solid var(--line-strong); padding: 1rem 1.1rem; }
+  .model-card h4 { margin-top: 0; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.04em; }
+  .model-card.revshare { border-color: var(--revshare); }
+  .model-card.revshare h4 { color: var(--revshare); }
+  .model-card.equity { border-color: var(--equity); }
+  .model-card.equity h4 { color: var(--equity); }
+  .model-card ul { margin: 0.4rem 0 0; padding-left: 1.1rem; font-size: 0.86rem; }
+  .model-card li { margin-bottom: 0.3rem; }
+
+  .tier-list { list-style: none; padding: 0; margin: 0.6rem 0 1rem; max-width: 72ch; }
+  .tier-item { display: grid; grid-template-columns: 160px 1fr; gap: 0.7rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+  .tier-item:last-child { border-bottom: none; }
+  .tier-item .tier-name { font-family: ui-monospace, monospace; font-weight: 700; color: var(--accent2); }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.6rem 0 1rem; }
+  .chip { font-size: 0.78rem; font-weight: 700; padding: 0.28rem 0.65rem; border-radius: 2px; border: 1px solid var(--line-strong); background: var(--paper-raised); color: var(--ink-muted); }
+  .chip.money { border-color: var(--accent2); color: var(--accent2); }
+  .chip.equity { border-color: var(--equity); color: var(--equity); }
+  .chip.revshare { border-color: var(--revshare); color: var(--revshare); }
+
+  .open-list { list-style: none; padding: 0; margin: 0.8rem 0 0; max-width: 72ch; }
+  .open-item { display: grid; grid-template-columns: 22px 1fr; gap: 0.5rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+  .open-item:last-child { border-bottom: none; }
+  .open-item .mark { color: var(--open); background: var(--open-bg); font-family: ui-monospace, monospace; font-size: 0.7rem; text-align: center; border-radius: 2px; padding: 0.15rem 0; height: fit-content; }
+  .open-item strong { display: block; margin-bottom: 0.1rem; }
+  .open-item span.note { color: var(--ink-muted); font-size: 0.86rem; }
+
+  @media (max-width: 720px) {
+    .page { grid-template-columns: 1fr; }
+    nav.toc { position: static; border-bottom: 1px solid var(--line); padding-bottom: 1rem; margin-bottom: 0.5rem; }
+    nav.toc ol { columns: 2; border-left: none; }
+    nav.toc a { border-left: none; padding-left: 0; }
+    .model-cards { grid-template-columns: 1fr; }
+    table.data { min-width: 540px; }
+  }
+</style>
+
+<div class="manifest-head">
+  <div class="manifest-inner">
+    <div class="stamp-row">
+      <span class="doc-code">CAPITAL // REG-CF FUNDING PLAN</span>
+      <span class="doc-code">STATUS: DRAFT — LEGAL REVIEW REQUIRED</span>
+    </div>
+    <h1 class="title">Container Auctions Funding Plan</h1>
+    <p class="subhead">How to fund build-out of the first container auction facility through public crowdfunding — the legal framework, platform choice, funding structure, and what an actual first raise would cover.</p>
+    <div class="stat-strip">
+      <div class="stat-cell"><span class="k">Legal path</span><span class="v">Regulation Crowdfunding (Reg CF)</span></div>
+      <div class="stat-cell"><span class="k">Raise cap</span><span class="v">$5M per 12-month period</span></div>
+      <div class="stat-cell"><span class="k">Structure</span><span class="v">Equity or revenue-share — both open</span></div>
+      <div class="stat-cell"><span class="k">Cheapest compliance tier</span><span class="v">&le;$124K, self-certified financials</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <nav class="toc" aria-label="Sections">
+    <span class="toc-label">Contents</span>
+    <ol>
+      <li><a href="#why-not-rewards"><span class="n">01</span>Why not Kickstarter</a></li>
+      <li><a href="#legal"><span class="n">02</span>Legal framework</a></li>
+      <li><a href="#structure"><span class="n">03</span>Equity vs. revenue-share</a></li>
+      <li><a href="#platforms"><span class="n">04</span>Platform comparison</a></li>
+      <li><a href="#target"><span class="n">05</span>What the first raise funds</a></li>
+      <li><a href="#campaign"><span class="n">06</span>Campaign structure</a></li>
+      <li><a href="#timeline"><span class="n">07</span>Timeline</a></li>
+      <li><a href="#risks"><span class="n">08</span>Risks &amp; ongoing obligations</a></li>
+      <li><a href="#open"><span class="n">09</span>Open questions</a></li>
+      <li><a href="#references"><span class="n">10</span>References</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section class="block" id="why-not-rewards">
+      <div class="block-tag"><span class="code">FND&#8209;01</span><h2>Why not Kickstarter</h2></div>
+      <p>Worth ruling out explicitly before picking a path. Kickstarter and Indiegogo are <strong>reward-based</strong> crowdfunding: backers pledge money and receive a product or perk in return, not a financial stake. That model fits a single product with something to ship — it doesn't fit an operating business with physical facilities, ongoing revenue, and investors who'd reasonably want a return tied to that revenue. Kickstarter's own rules explicitly exclude offering equity, revenue share, or financial returns as a reward.</p>
+      <p>The real fit for "fund an operating small business from the public" is <strong>Regulation Crowdfunding (Reg CF)</strong> — a specific SEC exemption built for exactly this, letting a private company raise real capital from both accredited and non-accredited investors online, in exchange for either equity or a revenue-share note. That's the path this plan builds around.</p>
+    </section>
+
+    <section class="block" id="legal">
+      <div class="block-tag"><span class="code">FND&#8209;02</span><h2>Legal framework</h2></div>
+      <p>Reg CF is a real securities offering, not a marketing campaign with a legal footnote — treat it that way from the start.</p>
+      <ul class="plain">
+        <li><strong>Raise cap:</strong> up to $5,000,000 in any rolling 12-month period.</li>
+        <li><strong>Must go through an SEC-registered intermediary</strong> — either a funding portal (Wefunder, StartEngine, Republic, Mainvest) or a broker-dealer. No direct-to-investor raise outside one of these.</li>
+        <li><strong>Open to non-accredited investors</strong>, not just wealthy/institutional ones — this is what makes it genuinely "crowd" funding, unlike most other securities exemptions.</li>
+        <li><strong>Form C filing</strong> with the SEC is required to launch an offering, and an <strong>annual report</strong> stays required for as long as the securities are outstanding — an ongoing compliance obligation, not a one-time filing.</li>
+      </ul>
+      <h3>Financial statement tiers</h3>
+      <p>Compliance cost scales directly with how much is raised — this is the number that should drive the funding target (Sec. 05), not the other way around.</p>
+      <ul class="tier-list">
+        <li class="tier-item"><span class="tier-name">Up to $124,000</span><span>Financial statements self-certified by the company's principal executive officer — no CPA required. The cheapest tier by far.</span></li>
+        <li class="tier-item"><span class="tier-name">$124,001–$618,000</span><span>CPA-<strong>reviewed</strong> financial statements required.</span></li>
+        <li class="tier-item"><span class="tier-name">Over $618,000</span><span>Full CPA-<strong>audited</strong> financial statements required.</span></li>
+        <li class="tier-item"><span class="tier-name">First-time issuer exception</span><span>A company's <em>first</em> Reg CF raise can use reviewed (not audited) financials up to $1,235,000 — a meaningfully cheaper compliance path than the standard Tier 3 audit requirement, but only available once.</span></li>
+      </ul>
+      <div class="callout"><strong>This needs a securities attorney</strong>, not just a pitch deck — Form C disclosure requirements, choosing a security structure, and ongoing reporting obligations are real legal work with real liability if done wrong. Budget for it as a line item (Sec. 05), not an afterthought.</div>
+    </section>
+
+    <section class="block" id="structure">
+      <div class="block-tag"><span class="code">FND&#8209;03</span><h2>Equity vs. revenue-share</h2></div>
+      <p>Both are legitimate under Reg CF and both are on the table — the tradeoffs are real and worth deciding deliberately, not defaulting into whichever platform is most famous.</p>
+      <div class="model-cards">
+        <div class="model-card revshare">
+          <h4>Revenue-share note</h4>
+          <ul>
+            <li>Investors get a cut of actual revenue until a target return is hit (e.g. 1.5&times; invested capital over 3&ndash;5 years) — no ownership stake, no dilution.</li>
+            <li>Ties investor return directly to the business actually generating revenue (buyer's premium + seller commission, already defined in the business plan) rather than to a future acquisition or IPO that may never happen.</li>
+            <li>Natural fit for a cash-flowing physical small business — this is literally the model Mainvest built its platform around (restaurants, breweries, local real estate).</li>
+            <li>Downside: payout obligations continue regardless of how well other parts of the business are doing, until the note is satisfied.</li>
+          </ul>
+        </div>
+        <div class="model-card equity">
+          <h4>Equity</h4>
+          <ul>
+            <li>Investors buy real ownership shares — familiar structure, appeals to investors looking for long-term upside if the company grows and is eventually sold or scales significantly.</li>
+            <li>Larger, more established platforms (Wefunder, StartEngine) and larger 2024 raise volumes (Sec. 04) skew toward this model.</li>
+            <li>Means giving up a real ownership percentage and taking on a shareholder base with associated rights and expectations.</li>
+            <li>Better fit if the long-term plan is expansion/scale-driven growth rather than steady per-facility cash flow.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Not resolved in this plan by design — worth a direct conversation with a securities attorney about which structure fits the actual long-term intent (steady multi-facility cash-flow business vs. a scale-and-exit growth story) before committing.</p>
+    </section>
+
+    <section class="block" id="platforms">
+      <div class="block-tag"><span class="code">FND&#8209;04</span><h2>Platform comparison</h2></div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Platform</th><th>Model</th><th>Issuer cost</th><th>Investor cost</th><th class="num">2024 Reg CF volume</th></tr></thead>
+          <tbody>
+            <tr><td>Mainvest</td><td>Revenue-share notes, local/physical business focus</td><td>Fee paid by business (not separately reported here)</td><td>Free — $100 investor minimum</td><td class="num">&mdash;</td></tr>
+            <tr><td>Wefunder</td><td>Equity (primarily)</td><td>~7.5&ndash;9.5% effective</td><td>No direct fee on most deals</td><td class="num">$99.4M</td></tr>
+            <tr><td>StartEngine</td><td>Equity (primarily)</td><td>~9&ndash;12% (incl. 2% equity warrant)</td><td>3.5% transaction fee</td><td class="num">$85.6M</td></tr>
+            <tr><td>Republic</td><td>Equity (primarily)</td><td>~10&ndash;11% (incl. 2% in securities)</td><td>No direct fee</td><td class="num">$15.6M</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Mainvest is the clearest structural fit if the revenue-share path (Sec. 03) is chosen — it's specifically built for physical local businesses, requires no direct investor fee, and (notably) requires a new business to first raise at least $10,000 from 10 people in their own personal network before going live publicly. That's a real, useful forcing function: it's a built-in validation gate before the wider public ever sees the campaign, not just a hoop to jump through.</p>
+      <p>If equity is chosen instead, Wefunder carried the most 2024 Reg CF volume of the three general platforms, with the lowest all-in issuer cost of the group.</p>
+    </section>
+
+    <section class="block" id="target">
+      <div class="block-tag"><span class="code">FND&#8209;05</span><h2>What the first raise funds</h2></div>
+      <p>The concrete first milestone: one fully built-out four-bay facility, matching the business plan's standard deployment unit (Sec. 02 there) — not "the whole platform" in one raise.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Line item</th><th class="num">Est. cost</th><th>Basis</th></tr></thead>
+          <tbody>
+            <tr><td>Per-bay lock hardware (igloohome Padlock 2, &times;4)</td><td class="num">$740</td><td>Sourced: $184.99 &times; 4 (Container Control System, Sec. 04)</td></tr>
+            <tr><td>Per-bay lock box shroud (Container One, &times;4)</td><td class="num">$259</td><td>Sourced: $64.80 &times; 4</td></tr>
+            <tr><td>Per-bay controller (ESP32 + sensors, &times;4)</td><td class="num">$400&ndash;800</td><td>Rough estimate — controller SKU still an open item (Container Control System, Sec. 13)</td></tr>
+            <tr><td>Shared Notecard + camera hardware</td><td class="num">$1,000&ndash;2,000</td><td>Rough estimate — camera vendor cost not yet sourced</td></tr>
+            <tr><td>Batteries + solar (4&times;10Ah bay, 1&times;2Ah shared, panels)</td><td class="num">$1,500&ndash;3,000</td><td>Rough estimate, LiFePO4 pricing not yet sourced</td></tr>
+            <tr><td>Site prep (pad, per business plan Sec. 02 spec)</td><td class="num">$5,000&ndash;15,000</td><td>Rough estimate — highly site-dependent</td></tr>
+            <tr><td>Legal (securities attorney, Form C, entity setup)</td><td class="num">$10,000&ndash;25,000</td><td>Rough estimate — get real quotes before finalizing target</td></tr>
+            <tr><td>Platform software (bidding, forms, deposits)</td><td class="num">Variable</td><td>Depends on build-vs-buy decisions not yet made</td></tr>
+            <tr><td>Crowdfunding platform fee (Sec. 04)</td><td class="num">~7.5&ndash;12% of raise</td><td>Sourced, comes off the top of whatever's raised</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout"><strong>Honest state of this budget:</strong> the hardware line items with real vendor pricing are small relative to the whole; the biggest costs (site prep, legal, software) are rough placeholders, not quotes. A credible funding target can't be locked until the Container Control System's open hardware-cost items are resolved and real site-prep/legal quotes come in — treat every number above as a planning input, not a number to put in front of investors yet.</div>
+      <p>Staying at or under the <strong>$124,000 self-certified tier</strong> (Sec. 02) for a single pilot facility is worth weighing deliberately against needing a larger raise that triggers reviewed or audited financials — a smaller, cheaper-to-comply-with first raise that proves the model may be worth more than stretching for a bigger number up front.</p>
+    </section>
+
+    <section class="block" id="campaign">
+      <div class="block-tag"><span class="code">FND&#8209;06</span><h2>Campaign structure</h2></div>
+      <p>What the campaign page itself needs, regardless of which platform or structure is chosen:</p>
+      <div class="chip-row">
+        <span class="chip">Pitch video</span>
+        <span class="chip">Investor deck</span>
+        <span class="chip money">Financial projections</span>
+        <span class="chip">Use-of-funds breakdown</span>
+        <span class="chip">Team background</span>
+        <span class="chip">Minimum / target / stretch goals</span>
+      </div>
+      <p>Financial projections should be built directly from numbers already established elsewhere, not invented fresh for the pitch: the 15% buyer's premium and 10% seller commission (business plan, Sec. 08), the four-bay rotation cycle (business plan, Sec. 02), and the ~1-week per-listing turnaround (business plan, Sec. 04) are the real unit economics an investor deck should be built around.</p>
+      <p>Use-of-funds should map line-by-line to Sec. 05's budget above once it's real numbers instead of placeholders — investors on these platforms expect to see exactly where the money goes, not a lump sum.</p>
+    </section>
+
+    <section class="block" id="timeline">
+      <div class="block-tag"><span class="code">FND&#8209;07</span><h2>Timeline</h2></div>
+      <ol class="plain">
+        <li><strong>Legal setup</strong> — engage a securities attorney, form the entity if not already done, decide equity vs. revenue-share (Sec. 03).</li>
+        <li><strong>Financials</strong> — prepare self-certified, reviewed, or audited statements depending on the target tier (Sec. 02).</li>
+        <li><strong>If pursuing Mainvest specifically:</strong> raise the required $10,000 from 10 people in-network <em>before</em> the platform lists the campaign publicly (Sec. 04).</li>
+        <li><strong>Platform application &amp; review</strong> — the funding portal reviews the offering (Form C, financials, campaign materials) before it goes live.</li>
+        <li><strong>Campaign runs</strong> — funds held in escrow (Sec. 04) until the raise closes; returned in full if the minimum isn't met.</li>
+        <li><strong>Close &amp; deploy</strong> — funds released to the business; build-out of the first facility begins.</li>
+        <li><strong>Annual reporting</strong> — required for as long as the securities are outstanding (Sec. 02), not a one-time obligation.</li>
+      </ol>
+    </section>
+
+    <section class="block" id="risks">
+      <div class="block-tag"><span class="code">FND&#8209;08</span><h2>Risks &amp; ongoing obligations</h2></div>
+      <ul class="plain">
+        <li><strong>Platform fees come off the top</strong> — 7.5&ndash;12% of whatever's raised (Sec. 04), before a dollar reaches the business.</li>
+        <li><strong>Revenue-share payouts are a real, ongoing obligation</strong> if that structure is chosen — they continue until the note is satisfied, drawing on revenue regardless of how the rest of the business is performing in a given month.</li>
+        <li><strong>Equity dilution is permanent</strong> if that structure is chosen — a real ownership stake goes to a public investor base, with the rights and expectations that come with it.</li>
+        <li><strong>Annual reporting is a standing compliance cost</strong>, not a one-time filing — factor ongoing accounting/legal time into the business's overhead, not just the initial raise.</li>
+        <li><strong>A failed raise (minimum not met) returns all funds</strong> — real prep work and legal cost can be spent without the facility ever getting built if the campaign doesn't hit its floor.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="open">
+      <div class="block-tag"><span class="code">FND&#8209;09</span><h2>Open questions</h2></div>
+      <ul class="open-list">
+        <li class="open-item"><span class="mark">?</span><span><strong>Equity vs. revenue-share</strong><span class="note">Deliberately left open (Sec. 03) — needs a decision with a securities attorney, not a default.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Platform selection</strong><span class="note">Mainvest fits revenue-share, Wefunder fits equity with the most volume — no platform committed to yet.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Real funding target</strong><span class="note">Sec. 05's budget is placeholder-heavy — site prep, legal, and software costs all need real quotes before a target is credible.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Financial statement tier target</strong><span class="note">Whether to deliberately cap the first raise at $124,000 for self-certified financials, or aim higher and accept CPA-reviewed costs (Sec. 02) — a real tradeoff between raise size and compliance overhead.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Securities attorney engagement</strong><span class="note">Not yet started — the entire timeline (Sec. 07) is blocked on this.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Entity structure</strong><span class="note">Whether the business entity that would issue securities is already formed and in the right structure for a Reg CF raise — not addressed anywhere else in either existing plan.</span></span></li>
+      </ul>
+    </section>
+
+    <section class="block" id="references">
+      <div class="block-tag"><span class="code">FND&#8209;10</span><h2>References</h2></div>
+      <ul class="plain">
+        <li><a href="https://www.sec.gov/resources-small-businesses/exempt-offerings/regulation-crowdfunding">Regulation Crowdfunding — SEC.gov</a> (raise cap, funding portal requirement, non-accredited investor access)</li>
+        <li><a href="https://www.sec.gov/resources-small-businesses/small-business-compliance-guides/regulation-crowdfunding-small-entity-compliance-guide-issuers">Regulation Crowdfunding: A Small Entity Compliance Guide for Issuers — SEC.gov</a> (financial statement tiers, first-time issuer exception)</li>
+        <li><a href="https://wellkeptwallet.com/mainvest-review/">Mainvest Review — Well Kept Wallet</a> (revenue-share model, $100 minimum, target returns, $10K/10-person pre-raise requirement)</li>
+        <li><a href="https://scoutmine.com/cost-comparison-of-crowdfunding-sites">Cost Comparison of Crowdfunding Websites — Scoutmine</a> (Wefunder/StartEngine/Republic issuer and investor fees)</li>
+        <li><a href="https://angelinvestorsnetwork.com/capital-raising/republic-review-2026-equity-crowdfunding-platform">Republic 2026 Review — Angel Investors Network</a> (2024 platform volume figures)</li>
+      </ul>
+    </section>
+
+  </main>
+</div>
