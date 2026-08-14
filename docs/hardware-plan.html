@@ -286,6 +286,18 @@
         <li><strong>Watchdog:</strong> hardware watchdog timer resets the MCU on firmware hang; state machine re-enters <span class="mono">BOOT</span> and re-asserts the last known armed state from local flash.</li>
         <li><strong>OTA updates:</strong> signed firmware images pulled from the backend on a maintenance window, staged to a secondary flash partition, only committed after a successful post-update self-test — failed boot rolls back automatically.</li>
       </ul>
+
+      <h3>Scaling to a 4-bay container</h3>
+      <p>The default above is one controller per bay. It's worth checking whether one ESP32 could instead run all four bays of a single container, since that would cut the controller count 4&times; — but the pin budget doesn't leave room for it.</p>
+      <p>An ESP32-WROOM-32 has 33 GPIO pins; 6 are reserved for the module's integrated SPI flash, leaving 27. Four of those 27 are input-only. Four bays' worth of sensors and actuators need:</p>
+      <ul class="plain">
+        <li>16 digital inputs (door, motion, tamper, smoke &times; 4 bays)</li>
+        <li>8 outputs (siren + lighting driver &times; 4 bays)</li>
+        <li>2 pins for the shared I2C bus to the Notecard</li>
+        <li>1 ADC pin for battery/solar voltage sense</li>
+      </ul>
+      <p>That's 27 pins against 27 available — a fit with <strong>zero margin</strong>, no spare pin for a status LED or a future sensor, and full reliance on the strapping pins (GPIO0, 2, 5, 12, 15), which firmware engineers normally avoid loading up for boot-reliability reasons. Technically possible; not a design worth shipping.</p>
+      <div class="callout"><strong>Recommendation:</strong> keep one small ESP32 per bay (cheap, ~$5&ndash;10 each, ample I/O headroom for a single bay's ~7 pins) rather than one shared controller for all four. Share only the expensive, certified part — the Notecard — across all four bays over a local bus (I2C/UART), with each bay's ESP32 talking to it in turn. This keeps the 4&times; cost savings on the part that actually costs money and needs cellular billing, while avoiding both the pin crunch and the bigger issue: a single shared controller means one firmware crash or hardware fault silently drops alarm and lock-correlation monitoring for all four bays at once, which runs against the failure-isolation principle in Sec. 10.</div>
     </section>
 
     <section class="block" id="sensors">
@@ -294,10 +306,10 @@
         <table class="data">
           <thead><tr><th>Component</th><th>Type</th><th>Notes</th></tr></thead>
           <tbody>
-            <tr><td>Door-open sensor</td><td>Magnetic reed switch</td><td>Binary open/closed; wired directly to controller GPIO, not cloud-dependent to register the event.</td></tr>
-            <tr><td>Motion detector</td><td>PIR</td><td>Interior-facing; only meaningful while armed (unit should be empty).</td></tr>
-            <tr><td>Tamper switch</td><td>Case-open microswitch</td><td>On both the controller enclosure and, where the lock hardware supports it, the lock body.</td></tr>
-            <tr><td>Fire/smoke/heat</td><td>Photoelectric smoke + thermistor heat-rise</td><td>Dual-sensor confirmation before escalating to a full fire alert reduces false triggers from dust or temperature swings alone.</td></tr>
+            <tr><td>Door-open sensor</td><td>Magnetic reed switch (passive)</td><td>Binary open/closed; wired directly to controller GPIO through a pull-up resistor, not cloud-dependent to register the event. No meaningful current draw of its own.</td></tr>
+            <tr><td>Motion detector</td><td>PIR, HC-SR501-class</td><td>Interior-facing; only meaningful while armed (unit should be empty). &lt;2 mA standing by, 65 mA while triggered.</td></tr>
+            <tr><td>Tamper switch</td><td>Case-open microswitch (passive)</td><td>On both the controller enclosure and, where the lock hardware supports it, the lock body. Same negligible draw as the door sensor.</td></tr>
+            <tr><td>Fire/smoke/heat</td><td>Photoelectric smoke detector module, 12V-rated</td><td>Dual-sensor confirmation (photoelectric + thermistor heat-rise) before escalating to a full fire alert reduces false triggers from dust or temperature swings alone. Security-industry photoelectric modules run in the tens-of-&micro;A range on standby, spiking only during an actual alarm condition — must be sourced as a 12V-bus part, not the 24V fire-panel-rated modules common in commercial fire systems.</td></tr>
             <tr><td>GPS/movement</td><td>Notecard's built-in GNSS (Sec. 02)</td><td>Duty-cycled fix (not continuous tracking) to conserve power; movement delta beyond threshold (default ~10 ft, tunable) triggers an alert.</td></tr>
             <tr><td>Battery/solar monitor</td><td>Voltage + current sense on the charge controller</td><td>State-of-charge estimate reported on every heartbeat, not just on fault.</td></tr>
             <tr><td>Alarm siren/strobe</td><td>12V actuator, controller-driven relay</td><td>Fires locally and immediately on <span class="mono">ALARM</span> entry — see Sec. 10 on the offline case.</td></tr>
@@ -359,27 +371,28 @@
 
     <section class="block" id="power">
       <div class="block-tag"><span class="code">SPEC&#8209;06</span><h2>Power budget</h2></div>
-      <p>The MCU and cellular/GPS rows below are now sourced from published datasheets rather than guessed. The sensor and lighting rows are still placeholders pending part selection (Sec. 12).</p>
+      <p>Every row except the charge-controller overhead is now sourced from a published datasheet or a documented industry-class part, not guessed.</p>
       <div class="table-wrap">
         <table class="data">
           <thead><tr><th>Component</th><th class="num">Quiescent</th><th class="num">Peak</th><th>Duty cycle</th><th class="num">Avg. daily draw</th></tr></thead>
           <tbody>
             <tr><td>ESP32 (light-sleep baseline)</td><td class="num">0.8 mA</td><td class="num">~25 mA</td><td>~95% light-sleep, wakes on sensor interrupt</td><td class="num">~48 mAh</td></tr>
-            <tr><td>Door / motion / tamper sensors</td><td class="num">2 mA</td><td class="num">5 mA</td><td>100%</td><td class="num">~48 mAh</td></tr>
-            <tr><td>Smoke / heat sensor</td><td class="num">3 mA</td><td class="num">3 mA</td><td>100%</td><td class="num">~72 mAh</td></tr>
+            <tr><td>Door + tamper switches (passive)</td><td class="num">&lt;0.1 mA</td><td class="num">&lt;0.1 mA</td><td>100% (pull-up leakage only)</td><td class="num">~2 mAh</td></tr>
+            <tr><td>PIR motion sensor</td><td class="num">&lt;2 mA</td><td class="num">65 mA</td><td>~1% (rare triggers while sealed &amp; armed, assumed)</td><td class="num">~63 mAh</td></tr>
+            <tr><td>Photoelectric smoke/heat sensor</td><td class="num">0.045 mA</td><td class="num">150 mA</td><td>~100% supervisory; alarm state ~0%</td><td class="num">~1 mAh</td></tr>
             <tr><td>Notecard cellular + GPS</td><td class="num">0.008 mA</td><td class="num">~250 mA</td><td>288 telemetry sessions/day + 24 GPS fixes/day (session-length assumed, see note)</td><td class="num">~215 mAh</td></tr>
             <tr><td>Siren / strobe</td><td class="num">0 mA</td><td class="num">500 mA</td><td>&lt;1% (alarm events only)</td><td class="num">~5 mAh</td></tr>
-            <tr><td>Safety lighting (LED)</td><td class="num">0 mA</td><td class="num">300 mA</td><td>~35% (nighttime, dimmed baseline)</td><td class="num">~2500 mAh</td></tr>
+            <tr><td>Safety lighting (10W 12V LED)</td><td class="num">0 mA</td><td class="num">~830 mA</td><td>~35% nighttime at a ~20% dimmed baseline, brief motion-boosts to full power (duty assumed)</td><td class="num">~1,793 mAh</td></tr>
             <tr><td>Charge controller overhead</td><td class="num">5 mA</td><td class="num">10 mA</td><td>100%</td><td class="num">~120 mAh</td></tr>
-            <tr class="total"><td>Total (lighting excluded)</td><td></td><td></td><td></td><td class="num">~508 mAh/day</td></tr>
-            <tr class="total"><td>Total (lighting included)</td><td></td><td></td><td></td><td class="num">~3,008 mAh/day</td></tr>
+            <tr class="total"><td>Total (lighting excluded)</td><td></td><td></td><td></td><td class="num">~454 mAh/day</td></tr>
+            <tr class="total"><td>Total (lighting included)</td><td></td><td></td><td></td><td class="num">~2,247 mAh/day</td></tr>
           </tbody>
         </table>
       </div>
-      <p>The real sleep-mode numbers land far below the old placeholder — the ESP32 and Notecard both spend the overwhelming majority of their time in sub-milliamp idle states, so the electronics stop being the dominant draw. Safety lighting now dominates the budget outright, which sharpens the case for revisiting its dusk-to-dawn baseline (motion-boosted only, no baseline glow) if a site's sun exposure is marginal.</p>
-      <div class="callout info"><strong>Sourced:</strong> ESP32 active/light-sleep/deep-sleep figures from Espressif's official current-consumption guidance and community bench measurements; Notecard idle/active figures from Blues' published NOTE-NBGL datasheet (BG95-M3 cellular module with integrated GNSS). The <strong>288 &times; ~10s telemetry sessions and 24 &times; ~45s GPS fixes per day are assumptions, not datasheet values</strong> — actual on-air session duration depends on network attach time and payload size, and needs bench validation once firmware exists (Sec. 12).</div>
+      <p>Two things moved with real numbers in hand. First, the passive switches (door, tamper) turn out to cost almost nothing — the old placeholder bundled them with an assumed "5mA" that never matched a passive component. Second, the lighting fixture's real full-power draw (830mA for a 10W 12V fixture) is higher than the old placeholder, but a dimmed nighttime baseline instead of full brightness brings its daily average down well below the old estimate. Lighting remains the dominant load by a wide margin either way.</p>
+      <div class="callout info"><strong>Sourced:</strong> ESP32 figures from Espressif's current-consumption guidance; Notecard from Blues' NOTE-NBGL datasheet; PIR from HC-SR501-class module specs; smoke detector supervisory/alarm current from a Potter Signal-class 12V-bus photoelectric module; LED fixture draw from Ohm's law on a representative 10W/12V product spec. <strong>Duty cycles for the PIR (how often it actually triggers) and the lighting dimming/motion-boost split are deployment assumptions, not datasheet values</strong> — same caveat as the telemetry session length below, all three need bench/field validation once real firmware and fixtures are in hand (Sec. 12).</div>
       <h4>Sizing formula</h4>
-      <p>Battery capacity (Ah) &ge; daily draw (Ah) &times; autonomy days &divide; usable depth-of-discharge. Example at 3 days of no-sun autonomy, 80% usable DoD on LiFePO4: 3.01&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>11.3 Ah minimum</strong> — round up for margin (e.g. 15 Ah). Solar panel sizing follows from daily Wh needed &divide; average peak sun hours &divide; system efficiency (~0.8 typical for charge-controller + wiring losses).</p>
+      <p>Battery capacity (Ah) &ge; daily draw (Ah) &times; autonomy days &divide; usable depth-of-discharge. Example at 3 days of no-sun autonomy, 80% usable DoD on LiFePO4: 2.25&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>8.4 Ah minimum</strong> — round up for margin (e.g. 10 Ah). Solar panel sizing follows from daily Wh needed &divide; average peak sun hours &divide; system efficiency (~0.8 typical for charge-controller + wiring losses).</p>
       <div class="callout info"><strong>Sizing standard:</strong> size to a conservative worst-case sun-hour assumption (a low-sun winter reference site) rather than tuning per install location — one hardware spec that works everywhere, instead of a per-site solar calculation for every new facility.</div>
       <div class="callout"><strong>Battery chemistry:</strong> LiFePO4 recommended over other lithium chemistries for outdoor, unattended, thermally-exposed deployment — more stable under heat and vibration, safer failure mode.</div>
     </section>
@@ -450,9 +463,9 @@
       <div class="block-tag"><span class="code">SPEC&#8209;12</span><h2>Open engineering questions</h2></div>
       <ul class="open-list">
         <li class="open-item"><span class="mark">?</span><span><strong>Camera vendor API access</strong><span class="note">The relay approach (Sec. 05) assumes an API suitable for pulling and re-serving the stream — needs confirming against the actual camera vendor's offering.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Telemetry session duration</strong><span class="note">ESP32 and Notecard state currents in Sec. 06 are now sourced from real datasheets — the remaining unknown is actual on-air session length per telemetry publish and GPS fix, which needs bench measurement with real firmware, not another datasheet lookup.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Sensor/lighting component selection</strong><span class="note">Door/motion/tamper, smoke/heat, siren, and lighting rows in Sec. 06 are still placeholder numbers pending actual part selection for those components.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standard is worst-case (Sec. 06); the 15 Ah minimum there is a real first estimate, but still moves once telemetry session duration and sensor/lighting parts are locked in.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Duty-cycle assumptions</strong><span class="note">Every component in Sec. 06 now has a sourced current-draw figure, but three duty-cycle assumptions still need bench/field validation: telemetry/GPS session length, how often the PIR actually triggers, and the lighting dimming/motion-boost split.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Siren specific part</strong><span class="note">Siren/strobe peak draw (500 mA) is still an unsourced placeholder — the door/motion/tamper/smoke/lighting rows now have real component picks, this one doesn't yet.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standard is worst-case (Sec. 06); the 8.4 Ah minimum there is a real estimate now, but still moves once the duty-cycle assumptions above are validated.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Cellular data plan costs</strong><span class="note">Both the low-bandwidth controller plan and the camera's viewer-dependent plan need real pricing once volumes are estimated.</span></span></li>
       </ul>
     </section>
