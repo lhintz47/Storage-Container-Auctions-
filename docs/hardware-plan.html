@@ -459,6 +459,14 @@
         <li><strong>Command path:</strong> backend &rarr; controller over the same MQTT command topic, with a required acknowledgment; an un-acked command is treated as failed, not assumed delivered.</li>
         <li><strong>OTA hosting:</strong> signed firmware images with staged rollout (a small cohort first) before fleet-wide push.</li>
       </ul>
+
+      <h3>Loss-of-contact notifications</h3>
+      <p>Yes — but "no one called home" means something different depending on whether it's one bay or the whole container, and the backend needs to tell those apart rather than firing the same alert either way.</p>
+      <ul class="plain">
+        <li><strong>One satellite bay goes quiet:</strong> the host relays each bay's heartbeat individually, so it can tell "bay C had nothing new to report" apart from "bay C's ESP32 stopped responding on the RS-485 bus" — the host explicitly flags the latter as an absence, rather than just omitting bay C from that cycle's payload and leaving the backend to guess. Three missed cycles (15 minutes) triggers an immediate <strong>"Bay C controller offline"</strong> notification. No failover applies here — only the host role has a backup chain (Sec. 02) — so this is a straight fault report, not a recovery attempt.</li>
+        <li><strong>The host itself goes quiet:</strong> the backend doesn't alert on the first gap, because Sec. 02's succession chain is designed to self-heal within it — worst case, Bay D's 35-minute threshold. Two outcomes: if a new-host announcement arrives during that window, the backend logs the failover and sends a lower-urgency <strong>"Host failover: Bay A &rarr; Bay B, field service recommended"</strong> notification rather than a connectivity-down alert, since the container recovered on its own. If nothing arrives by ~40 minutes (past the worst case, with margin for the handoff itself), the backend escalates to <strong>"Container 14: total connectivity loss"</strong> — the succession chain has been exhausted, and this one needs a person.</li>
+      </ul>
+      <p>Either way, this is a report of a <em>reporting</em> failure, not a security failure — per Sec. 10, a bay's local alarm response never depends on any of this, so "no one called home" means the operator needs to go check on a controller, not that a break-in is in progress unnoticed.</p>
     </section>
 
     <section class="block" id="security">
