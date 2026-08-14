@@ -220,7 +220,8 @@
       <li><a href="#security"><span class="n">09</span>Security model</a></li>
       <li><a href="#failure"><span class="n">10</span>Failure modes &amp; recovery</a></li>
       <li><a href="#commissioning"><span class="n">11</span>Provisioning &amp; commissioning</a></li>
-      <li><a href="#open"><span class="n">12</span>Open engineering questions</a></li>
+      <li><a href="#environment"><span class="n">12</span>Environmental parameters</a></li>
+      <li><a href="#open"><span class="n">13</span>Open engineering questions</a></li>
     </ol>
   </nav>
 
@@ -311,7 +312,15 @@
       </div>
       <p>The bus matters: a shipping container is roughly 40 ft across all four bays, well beyond what I2C tolerates without extender hardware. <strong>RS-485</strong> is the standard choice for exactly this — differential, multi-drop, built for tens of meters over cheap twisted pair, with well-supported transceiver chips (MAX485-class) that bridge to any ESP32 UART. Each satellite bay needs one added transceiver chip; the UART connection still only costs 2 GPIO pins, so the per-bay pin budget from Sec. 03/06 doesn't change.</p>
       <p>The Notecard itself draws from a small <strong>dedicated battery</strong>, not the host bay's own battery. Piggybacking it on Bay A's battery would mean a shading or fault issue on one specific bay takes out cellular reporting for the whole container — the same single-point-of-failure problem the per-bay ESP32 decision was meant to avoid, just moved one layer up. A dedicated battery decouples container-wide connectivity from any one bay's power fate (sizing in Sec. 06).</p>
-      <div class="callout"><strong>Residual single point of failure:</strong> the host ESP32 itself is still one device — if it crashes or fails, the other three bays' <em>local</em> alarm and lighting keep working (each bay's own controller and battery are untouched), but all four bays lose cellular reporting until the host recovers or is replaced. Worth deciding whether that's an acceptable residual risk or whether host failover needs designing in (Sec. 12).</div>
+      <h3>Host failover</h3>
+      <p>One bay — Bay B, by default — is designated <strong>backup host</strong>. That only works if Bay B can physically reach the Notecard, which means the Notecard's I2C lines and power can't be wired to Bay A alone: they route through a small I2C bus switch with two channels, Bay A's and Bay B's, gated by a GPIO enable line each side can assert. Only one channel is ever live, so there's no scenario where two ESP32s drive the Notecard's I2C bus at once.</p>
+      <ol class="plain">
+        <li>The active host broadcasts an "I'm host" heartbeat on the RS-485 bus every 5 minutes — the same cadence as its cellular heartbeat, no new interval to manage.</li>
+        <li>Bay B listens for it. Three missed broadcasts in a row (15 minutes) triggers failover: Bay B asserts its side of the I2C switch, claims the Notecard, and becomes host.</li>
+        <li>The first thing the new host does is report the failover itself to the backend — "was Bay A, now Bay B" — so it's visible as a field-service flag, not a silent state change.</li>
+        <li>If Bay A's ESP32 comes back (say, after a watchdog reset), it checks the I2C switch state on boot. If Bay B is already asserting it, Bay A defers and resumes as a satellite rather than fighting for control. Flipping host status back to Bay A is a deliberate field-service action, not automatic — auto-flip-back risks flapping between hosts on a marginal, intermittent fault.</li>
+      </ol>
+      <p>This covers one level of redundancy: Bay B backing up Bay A. If both fail, the container still loses cellular reporting, same as before — worth being explicit that this narrows the risk rather than eliminates it, at the cost of one added switch IC and running the Notecard's I2C/power wiring to two physical locations instead of one.</p>
     </section>
 
     <section class="block" id="sensors">
@@ -484,16 +493,44 @@
       </ol>
     </section>
 
+    <section class="block" id="environment">
+      <div class="block-tag"><span class="code">SPEC&#8209;12</span><h2>Environmental parameters</h2></div>
+      <p>The system's real operating envelope is set by its narrowest component and by the container itself — not by whichever part has the widest-looking number on its datasheet.</p>
+      <div class="table-wrap">
+        <table class="data compact">
+          <thead><tr><th>Component</th><th>Rated range</th><th>Limiting?</th></tr></thead>
+          <tbody>
+            <tr><td>ESP32-WROOM-32</td><td>&minus;40&deg;C to +85&deg;C</td><td>No</td></tr>
+            <tr><td>Notecard (cellular variant)</td><td>&minus;35&deg;C to +75&deg;C</td><td><strong>Yes</strong> &mdash; narrowest electronics rating</td></tr>
+            <tr><td>LiFePO4 battery, discharge</td><td>Wide (well below 0&deg;C usable)</td><td>No</td></tr>
+            <tr><td>LiFePO4 battery, charging</td><td>0&deg;C to +45&deg;C</td><td><strong>Yes</strong> &mdash; hard chemistry limit</td></tr>
+            <tr><td>Enclosure ingress</td><td>IP65+ (Sec. 02)</td><td>Dust/water, not temperature</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>Electronics operating range</h4>
+      <p>Bounded by the Notecard's cellular-variant rating, &minus;35&deg;C to +75&deg;C, not the ESP32's wider one. If a deployment climate ever pushes past that, the Cell+WiFi Notecard variant is rated &minus;40&deg;C to +85&deg;C instead — a part swap, not a redesign.</p>
+      <h4>Container interior thermal risk</h4>
+      <p>A sealed steel shipping container in direct sun runs meaningfully hotter inside than the outside air — well past +75&deg;C interior air temperature is realistic in a hot climate, enough to exceed the Notecard's rated ceiling even at a site where the local weather forecast never gets close. This needs mitigation, not just a wide-rated part: mount the controller enclosure away from direct solar loading, favor a light-colored or reflective enclosure, keep the vented design already specified (Sec. 02), and treat actual enclosure interior temperature as something to measure in a real container rather than assume it tracks outside air.</p>
+      <h4>Battery charging floor</h4>
+      <p>The tightest constraint in the system: LiFePO4 chemistry cannot safely charge below 0&deg;C — a hard limit, not a design choice, and charging through it risks permanent capacity loss (lithium plating). A BMS with a low-temperature charge cutoff is a requirement everywhere a site sees freezing mornings, not an optional nicety. When it cuts charging off, that's fine — the whole system is already sized to run 3 days on battery with zero solar input (Sec. 06), so a cold morning pausing the charge cycle isn't itself a failure.</p>
+      <h4>Humidity</h4>
+      <p>The IP65+ enclosure (Sec. 02) handles dust and water ingress; the electronics inside it should still be conformal-coated, since a sealed, intermittently-vented enclosure will see real day-to-night humidity and condensation cycling regardless of its ingress rating.</p>
+      <h4>Vibration &amp; shock</h4>
+      <p>Units are relocatable containers (Sec. 02), which means real transport vibration and shock loading on top of a stationary install — connectors, battery mounting, and PCB-level shock resistance all need to survive that. Not yet validated against an actual standard (Sec. 13).</p>
+    </section>
+
     <section class="block" id="open">
-      <div class="block-tag"><span class="code">SPEC&#8209;12</span><h2>Open engineering questions</h2></div>
+      <div class="block-tag"><span class="code">SPEC&#8209;13</span><h2>Open engineering questions</h2></div>
       <ul class="open-list">
         <li class="open-item"><span class="mark">?</span><span><strong>Camera vendor API access</strong><span class="note">The relay approach (Sec. 05) assumes an API suitable for pulling and re-serving the stream — needs confirming against the actual camera vendor's offering.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Duty-cycle assumptions</strong><span class="note">Every component in Sec. 06 now has a sourced current-draw figure, but three duty-cycle assumptions still need bench/field validation: telemetry/GPS session length, how often the PIR actually triggers, and the lighting dimming/motion-boost split.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Siren specific part</strong><span class="note">Siren/strobe peak draw (500 mA) is still an unsourced placeholder — the door/motion/tamper/smoke/lighting rows now have real component picks, this one doesn't yet.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standards are set (Sec. 06: 10 Ah/bay, 2 Ah for the Notecard); both move once the duty-cycle assumptions above are validated.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Cellular data plan costs</strong><span class="note">Both the low-bandwidth controller plan and the camera's viewer-dependent plan need real pricing once volumes are estimated.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>RS-485 transceiver part &amp; wiring</strong><span class="note">Sec. 02 specifies RS-485 for the inter-bay bus and MAX485-class as the transceiver family, but no specific part is chosen, and physical wiring/connector routing across the four bays isn't laid out.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Host-bay failover</strong><span class="note">Sec. 02 flags that a host ESP32 failure drops cellular reporting for all four bays, even though each bay's local alarm keeps working — undecided whether that residual risk is acceptable or needs a failover design (e.g. a satellite that can take over as host).</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>RS-485 transceiver &amp; I2C switch parts</strong><span class="note">Sec. 02 specifies RS-485/MAX485-class for the inter-bay bus and an I2C switch for host failover, but neither has a specific part chosen, and physical wiring/connector routing across the four bays isn't laid out.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Enclosure interior temperature, measured</strong><span class="note">Sec. 12 flags real risk of exceeding the Notecard's +75&deg;C ceiling inside a sun-loaded steel container — needs an actual field measurement, not just the mitigation plan.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Vibration/shock standard</strong><span class="note">Sec. 12 flags this as unvalidated against any real standard for a relocatable-container deployment — needs one chosen (e.g. an automotive or MIL-STD-810-style shock/vibe profile) and tested against.</span></span></li>
       </ul>
     </section>
 
