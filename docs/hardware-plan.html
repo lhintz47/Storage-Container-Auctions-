@@ -378,6 +378,25 @@
       </ul>
       <p>What works today, with no added hardware: the backend can generate a brand-new valid PIN at any instant and relay it to whoever's on-site — the same mechanism already designed for the fire department code. That gets a responder through the door within seconds without the lock itself ever needing connectivity, which covers the actual emergency scenario (someone present who needs in) even though it isn't a literal remote actuation.</p>
       <div class="callout"><strong>If true remote actuation is a hard requirement</strong> — e.g. an automated dispatch integration with no one on-site to enter a code — that's a different capability than this lock provides at all, bridge or not, and points back toward Model B: a wired electronic strike or deadbolt the controller can actuate directly, the same alternative already on the table above.</div>
+
+      <h3>Adding the Wi-Fi Bridge, if pursued</h3>
+      <p>Since the site runs on cellular by design (Sec. 07), giving the bridge Wi-Fi means adding a second, independent connection, not just the bridge accessory itself:</p>
+      <ul class="plain">
+        <li>A dedicated small cellular-to-Wi-Fi router — its own SIM, its own monthly data plan, its own power draw. The Notecard can't serve this role; it's a structured-data cellular module, not a general IP router.</li>
+        <li>The bridge needs to sit within Bluetooth range of the lock <em>and</em> Wi-Fi range of that router. Whether one bridge can cover all four bays' locks at once (plausible, given the whole container is under ~40 ft) or needs one per lock isn't confirmed (Sec. 13).</li>
+        <li>Power: rather than a fifth standalone battery, the router and bridge can reasonably share the Notecard's dedicated battery/solar hub (Sec. 06) — both are already "shared container connectivity," not any one bay's concern.</li>
+      </ul>
+      <p>Worth weighing deliberately: this is a real recurring cost (a second cellular bill) and a new failure point, bought to get a capability whose main use case — someone on-site needs in right now — the PIN-relay path below already covers with no new hardware at all.</p>
+
+      <h3>Getting the code to a first responder</h3>
+      <p>Ranked by how much a fire department actually trusts each path, not by how much technology it uses:</p>
+      <ol class="plain">
+        <li><strong>Knox Box (recommended primary).</strong> Most fire departments already carry a master key to their jurisdiction's Knox Box network. Store a spare key or a printed code in an on-site Knox Box and there's nothing to relay, text, or scan — it's the standard departments already trust for exactly this, precisely because it doesn't depend on a private company's app or network working in the moment.</li>
+        <li><strong>Monitored operator relay.</strong> When the fire alert fires (Sec. 06), an on-call operator is notified and reads the current PIN to dispatch or the responding crew by phone or radio. Standard alarm-monitoring pattern, no new hardware.</li>
+        <li><strong>QR placard &rarr; live code page.</strong> A code on the container resolves to a page showing the current PIN. Fast, but forces a real tradeoff: require login (slower, more secure) or leave it open-access (faster, but anyone who scans it gets a working code) — a decision to make deliberately, not default into.</li>
+        <li><strong>Direct CAD/dispatch integration.</strong> Pushing the code straight into a department's dispatch system electronically. Real in some jurisdictions, likely out of reach for a small private operator early on.</li>
+      </ol>
+      <p>Recommended default: Knox Box as the primary path, monitored-operator relay as the software-side backup. The Wi-Fi Bridge / live-unlock path above is optional on top of these, not a replacement for either.</p>
     </section>
 
     <section class="block" id="camera">
@@ -550,6 +569,8 @@
         <li class="open-item"><span class="mark">?</span><span><strong>Cellular data plan costs</strong><span class="note">Both the low-bandwidth controller plan and the camera's viewer-dependent plan need real pricing once volumes are estimated.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>RS-485 transceiver &amp; I2C&ndash;RS-485 bridge parts</strong><span class="note">Sec. 02 specifies MAX485-class for the inter-bay bus and a dedicated I2C&ndash;RS-485 bridge IC (no custom firmware) next to the Notecard, but neither has a specific part chosen, and physical wiring/connector routing across the four bays isn't laid out.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Bridge redundancy</strong><span class="note">The 4-way host failover in Sec. 02 removes the old A/B-only limit but introduces the I2C&ndash;RS-485 bridge as a new single point of failure for Notecard access — undecided whether a single bridge is acceptable or whether it needs its own backup.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>igloohome Wi-Fi Bridge coverage per lock</strong><span class="note">Sec. 04 assumes it's plausible for one bridge to cover all four bays' locks over Bluetooth, but that hasn't been confirmed against igloohome's actual per-bridge lock limit.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Knox Box program enrollment</strong><span class="note">Sec. 04's recommended primary emergency-access path depends on the local fire department's Knox Box program actually covering each facility's jurisdiction — needs confirming per site, not assumed universal.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Enclosure interior temperature, measured</strong><span class="note">Sec. 12 flags real risk of exceeding the Notecard's +75&deg;C ceiling inside a sun-loaded steel container — needs an actual field measurement, not just the mitigation plan.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Vibration/shock standard</strong><span class="note">Sec. 12 flags this as unvalidated against any real standard for a relocatable-container deployment — needs one chosen (e.g. an automotive or MIL-STD-810-style shock/vibe profile) and tested against.</span></span></li>
       </ul>
