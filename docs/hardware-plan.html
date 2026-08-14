@@ -280,7 +280,7 @@
       </ul>
       <h3>Behavior</h3>
       <ul class="plain">
-        <li><strong>Heartbeat:</strong> periodic keepalive publish (interval TBD, Sec. 12) — a missed heartbeat is what the backend treats as a lost-controller fault, not a special "I'm dying" message the controller has to send.</li>
+        <li><strong>Heartbeat:</strong> periodic keepalive publish every 5 minutes — a missed heartbeat is what the backend treats as a lost-controller fault, not a special "I'm dying" message the controller has to send.</li>
         <li><strong>Watchdog:</strong> hardware watchdog timer resets the MCU on firmware hang; state machine re-enters <span class="mono">BOOT</span> and re-asserts the last known armed state from local flash.</li>
         <li><strong>OTA updates:</strong> signed firmware images pulled from the backend on a maintenance window, staged to a secondary flash partition, only committed after a successful post-update self-test — failed boot rolls back automatically.</li>
       </ul>
@@ -314,7 +314,7 @@
           <ul>
             <li>Lock reports unlock events to its own vendor cloud/API.</li>
             <li>Controller reports the door-open sensor event independently.</li>
-            <li>Backend matches the two within a tolerance window (e.g. &plusmn;30s) to classify the open as authorized or not.</li>
+            <li>Backend matches the two within a 30-second tolerance window to classify the open as authorized or not.</li>
             <li>No new wiring; works with the current lock candidate as-is.</li>
             <li>Risk: a connectivity outage on either side during the correlation window can misclassify — needs an explicit fallback rule (Sec. 10).</li>
           </ul>
@@ -377,7 +377,8 @@
       </div>
       <p>Safety lighting dominates the budget by a wide margin — worth treating as its own line item when sizing solar/battery per site, and worth revisiting the dusk-to-dawn baseline (motion-boosted only, no baseline glow) as a lower-power alternative if a site's sun exposure is marginal.</p>
       <h4>Sizing formula</h4>
-      <p>Battery capacity (Ah) &ge; daily draw (Ah) &times; autonomy days &divide; usable depth-of-discharge. Example at 3 days of no-sun autonomy, 80% usable DoD on LiFePO4: 3.96&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>14.9 Ah minimum</strong> — round up for margin (e.g. 20 Ah). Solar panel sizing follows from daily Wh needed &divide; average peak sun hours for the install location &divide; system efficiency (~0.8 typical for charge-controller + wiring losses).</p>
+      <p>Battery capacity (Ah) &ge; daily draw (Ah) &times; autonomy days &divide; usable depth-of-discharge. Example at 3 days of no-sun autonomy, 80% usable DoD on LiFePO4: 3.96&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>14.9 Ah minimum</strong> — round up for margin (e.g. 20 Ah). Solar panel sizing follows from daily Wh needed &divide; average peak sun hours &divide; system efficiency (~0.8 typical for charge-controller + wiring losses).</p>
+      <div class="callout info"><strong>Sizing standard:</strong> size to a conservative worst-case sun-hour assumption (a low-sun winter reference site) rather than tuning per install location — one hardware spec that works everywhere, instead of a per-site solar calculation for every new facility.</div>
       <div class="callout"><strong>Battery chemistry:</strong> LiFePO4 recommended over other lithium chemistries for outdoor, unattended, thermally-exposed deployment — more stable under heat and vibration, safer failure mode.</div>
     </section>
 
@@ -400,7 +401,7 @@
     <section class="block" id="backend">
       <div class="block-tag"><span class="code">SPEC&#8209;08</span><h2>Backend architecture</h2></div>
       <ul class="plain">
-        <li><strong>Ingestion:</strong> MQTT broker over TLS. Each controller publishes to a per-unit topic namespace (telemetry, discrete events) and subscribes to a command topic for remote arm/disarm or diagnostic requests.</li>
+        <li><strong>Ingestion:</strong> MQTT broker over TLS on a managed IoT platform (e.g. AWS IoT Core or Azure IoT Hub) rather than self-hosted — built-in device identity management and TLS handling, less ops burden at small-to-medium fleet size. Each controller publishes to a per-unit topic namespace (telemetry, discrete events) and subscribes to a command topic for remote arm/disarm or diagnostic requests.</li>
         <li><strong>Device identity:</strong> per-controller certificate or unique API credential issued at commissioning (Sec. 11) — never a shared fleet-wide secret.</li>
         <li><strong>Data model:</strong> time-series storage for continuous telemetry (battery %, heartbeat), a separate discrete event log for alerts (door-open, movement, fault, fire) — different query patterns, different retention needs.</li>
         <li><strong>Alert rules engine:</strong> evaluates incoming events against the same conditions defined in the unit's state machine (Sec. 02) and dispatches notifications — this is the layer the door/lock correlation (Sec. 04) actually runs in.</li>
@@ -447,12 +448,9 @@
       <div class="block-tag"><span class="code">SPEC&#8209;12</span><h2>Open engineering questions</h2></div>
       <ul class="open-list">
         <li class="open-item"><span class="mark">?</span><span><strong>Controller hardware SKU</strong><span class="note">MCU class is specified (Sec. 02); exact board/vendor not chosen.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Heartbeat interval</strong><span class="note">Trades battery life against how fast a lost-controller fault is detected — needs a number.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Lock/door correlation window</strong><span class="note">The &plusmn;30s tolerance in Sec. 04 is illustrative; needs tuning against real lock-vendor event latency.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Camera vendor API access</strong><span class="note">The relay approach (Sec. 05) assumes an API suitable for pulling and re-serving the stream — needs confirming against the actual camera vendor's offering.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Real component power draws</strong><span class="note">Sec. 06's budget is illustrative; needs real datasheet numbers once specific parts are chosen.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Depends on both the real power budget and the install site's actual sun-hour data.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>MQTT broker hosting</strong><span class="note">Self-hosted vs. a managed IoT platform (e.g. AWS IoT Core, Azure IoT Hub) — affects cost, ops burden, and vendor lock-in.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Real component power draws</strong><span class="note">Sec. 06's budget stays illustrative on purpose — blocked on the controller hardware decision (still open above), since real numbers depend on which parts get chosen.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standard is now worst-case (Sec. 06) — still blocked on the real power budget (controller hardware decision above) to turn that into an actual battery/panel spec.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Cellular data plan costs</strong><span class="note">Both the low-bandwidth controller plan and the camera's viewer-dependent plan need real pricing once volumes are estimated.</span></span></li>
       </ul>
     </section>
