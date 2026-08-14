@@ -166,7 +166,7 @@
       <div class="stat-cell"><span class="k">Revenue model</span><span class="v">15% buyer's premium + 10% seller commission</span></div>
       <div class="stat-cell"><span class="k">Payment processing</span><span class="v">Stripe: 2.9% + $0.30/charge</span></div>
       <div class="stat-cell"><span class="k">Insurance (sourced)</span><span class="v">~$67&ndash;129/mo, $1M/$2M GL</span></div>
-      <div class="stat-cell"><span class="k">Biggest cost gaps</span><span class="v">Cellular data, labor, controller SKU</span></div>
+      <div class="stat-cell"><span class="k">Biggest cost gaps</span><span class="v">Facility labor, property insurance</span></div>
     </div>
   </div>
 </div>
@@ -227,14 +227,16 @@
           <tbody>
             <tr><td>General liability insurance ($1M/$2M)</td><td class="num">$67&ndash;129</td><td>Sourced: small self-storage business rate range</td></tr>
             <tr><td>Property insurance (hardware, containers, contents-in-transit)</td><td class="num">Not yet estimated</td><td>Open — a distinct policy from general liability, not yet quoted</td></tr>
-            <tr><td>Controller cellular data (per bay, low-bandwidth)</td><td class="num">Not yet estimated</td><td>Open (Container Control System, Sec. 07)</td></tr>
-            <tr><td>Camera cellular data (viewer-dependent)</td><td class="num">Not yet estimated</td><td>Open, depends on concurrent-viewer volume (Container Control System, Sec. 07)</td></tr>
+            <tr><td>Controller cellular + Notehub (shared per facility)</td><td class="num">$0&ndash;5</td><td>Sourced: 500MB included with the Notecard, Notehub free under 5,000 credits/mo if the host batches all four bays' telemetry into one event per cycle (Container Control System, Sec. 07)</td></tr>
+            <tr><td>Interior camera data (&times;4, one per bay — can't be shared)</td><td class="num">$40&ndash;80</td><td>Sourced: Reolink US plans, ~$10&ndash;20/camera at moderate use &times; 4 (Container Control System, Sec. 07)</td></tr>
+            <tr><td>Exterior/security camera data</td><td class="num">Not yet estimated</td><td>Open — depends on whether one wide-angle plan can cover all four bay doors or needs four more (Container Control System, Sec. 13)</td></tr>
             <tr><td>Facility manager labor</td><td class="num">Not yet estimated</td><td>Open — role scope (part-time/on-call vs. dedicated) not yet defined</td></tr>
             <tr><td>Payment processing</td><td class="num">Transactional, not fixed</td><td>Sourced: Stripe 2.9% + $0.30 per charge (Sec. 05)</td></tr>
+            <tr class="total"><td>Known/sourced subtotal</td><td class="num">~$107&ndash;214/mo</td><td>Insurance + controller + interior cameras</td></tr>
           </tbody>
         </table>
       </div>
-      <p>Only one OpEx line has a real number attached. The rest — cellular data, property insurance, and labor — are the actual gating unknowns for whether this business is viable at any given auction volume, more than the CapEx build-out cost is.</p>
+      <p>Cellular data turned out to be the cheap surprise on the controller side (near-free, if the host batches telemetry) and the expensive correction on the camera side — four separate interior-camera data plans, not one, since each bay needs its own live view. Property insurance, exterior-camera sharing, and facility labor are still the real gating unknowns.</p>
     </section>
 
     <section class="block" id="services">
@@ -302,7 +304,7 @@
           </tbody>
         </table>
       </div>
-      <div class="callout"><strong>This can't be turned into a real break-even yet.</strong> The revenue side has a defensible range (Sec. 05); the cost side is missing its biggest variables — cellular data, property insurance, and labor (Sec. 03) — so there's no honest way to say whether $424&ndash;636/month in net auction revenue covers monthly OpEx. Filling in those three OpEx lines is the single highest-value next step for this document, ahead of refining anything else.</div>
+      <div class="callout"><strong>Partial break-even now possible, still not complete.</strong> Known OpEx (insurance + controller connectivity + interior cameras, Sec. 03) runs ~$107&ndash;214/month — comfortably below the $424&ndash;636/month net revenue range at realistic volume, which is an encouraging early signal. But <strong>property insurance, exterior-camera data, and facility labor are still unpriced</strong>, and labor in particular could plausibly be the largest OpEx line once it's real — there's still no honest way to call this "break-even confirmed." Filling in those three remaining lines is the highest-value next step, not a full re-model.</div>
     </section>
 
     <section class="block" id="pricing">
@@ -333,7 +335,7 @@
     <section class="block" id="open">
       <div class="block-tag"><span class="code">ECON&#8209;09</span><h2>Open questions</h2></div>
       <ul class="open-list">
-        <li class="open-item"><span class="mark">?</span><span><strong>Cellular data costs</strong><span class="note">Both controller and camera data plans are still unpriced (Container Control System, Sec. 07) — the single biggest OpEx gap in this document.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Exterior camera data cost</strong><span class="note">Controller and interior-camera cellular costs are now sourced (Sec. 03); exterior/security camera data still depends on whether one plan can cover all four bay doors or needs four more (Container Control System, Sec. 13).</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Facility manager labor model</strong><span class="note">Part-time/on-call vs. dedicated staff isn't decided, so there's no labor cost to model at all yet.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Facility hosting fee structure</strong><span class="note">Sec. 07 flags this as entirely undefined — needed before pitching any third-party facility owner as a host.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Property insurance quote</strong><span class="note">Distinct from the sourced general-liability figure (Sec. 03) — covers the hardware and contents themselves, not yet priced.</span></span></li>
@@ -348,6 +350,8 @@
         <li><a href="https://www.underpriced.app/blog/storage-unit-auction-flipping-guide-2026">Storage Unit Auction Flipping Guide 2026 — Underpriced</a> (winning bid range, percentage-based buyer fees)</li>
         <li><a href="https://www.sidehustlenation.com/storage-unit-auctions/">Storage Unit Auctions — Side Hustle Nation</a> (typical sale price range)</li>
         <li><a href="https://drop-desk.com/blog/guides/stripe-fees-for-marketplace-operators/">Stripe Fees Explained for Marketplace Operators — DropDesk</a></li>
+        <li><a href="https://blues.com/pricing/">Simplified IoT Pricing — Blues</a> (Notecard included data, Notehub consumption-credit pricing)</li>
+        <li><a href="https://reolink.com/blog/reolink-subscription-cost/">Does Reolink Require a Subscription? — Reolink</a> (US cellular data plan pricing)</li>
         <li><a href="https://ecomcalctools.com/blog/fees-stripe/stripe-connect-fees/">Stripe Connect Fees 2026 — EcomCalcTools</a> (base rate, Express account fees, cross-border surcharges)</li>
         <li><a href="https://generalliabilityinsure.com/small-business/self-storage-insurance.html">Self-Storage Insurance Cost Guide — General Liability Insure</a></li>
         <li><a href="https://diysolarforum.com/threads/diy-lifepo4-battery-cost-per-amp-hour-delivered-to-us.10451/">DIY LiFePO4 Battery Cost per Amp Hour — DIY Solar Power Forum</a></li>

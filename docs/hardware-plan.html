@@ -285,7 +285,7 @@
       </ul>
       <h3>Behavior</h3>
       <ul class="plain">
-        <li><strong>Heartbeat:</strong> periodic keepalive publish every 5 minutes — a missed heartbeat is what the backend treats as a lost-controller fault, not a special "I'm dying" message the controller has to send.</li>
+        <li><strong>Heartbeat:</strong> periodic keepalive publish every 5 minutes — a missed heartbeat is what the backend treats as a lost-controller fault, not a special "I'm dying" message the controller has to send. The host <strong>batches all four bays' heartbeats into one combined Notehub event per cycle</strong> rather than publishing each separately — the difference between roughly $3&ndash;5/month and $23/month in cellular data cost (Sec. 07), for the same information.</li>
         <li><strong>Watchdog:</strong> hardware watchdog timer resets the MCU on firmware hang; state machine re-enters <span class="mono">BOOT</span> and re-asserts the last known armed state from local flash.</li>
         <li><strong>OTA updates:</strong> signed firmware images pulled from the backend on a maintenance window, staged to a secondary flash partition, only committed after a successful post-update self-test — failed boot rolls back automatically.</li>
       </ul>
@@ -482,18 +482,21 @@
 
     <section class="block" id="connectivity">
       <div class="block-tag"><span class="code">SPEC&#8209;07</span><h2>Connectivity &amp; data budget</h2></div>
-      <p>Two very different connectivity profiles live on one site: the controller's telemetry is tiny and infrequent; the camera's video stream is not. Treating them as one connection would size the whole system for the camera's needs.</p>
+      <p>Two very different connectivity profiles live on one site: the controller's telemetry is tiny and infrequent; the camera's video stream is not. Treating them as one connection would size the whole system for the camera's needs. Real pricing below for both.</p>
       <div class="table-wrap">
         <table class="data">
-          <thead><tr><th>Link</th><th>Technology</th><th>Typical monthly data</th></tr></thead>
+          <thead><tr><th>Link</th><th>Technology</th><th class="num">Est. monthly cost</th></tr></thead>
           <tbody>
-            <tr><td>Controller telemetry</td><td>LTE-M or NB-IoT (low-power, low-bandwidth cellular)</td><td>Low — heartbeats and discrete events, well under 100&nbsp;MB/month</td></tr>
-            <tr><td>Camera stream</td><td>Standard LTE (own SIM, per Sec. 05)</td><td>High and viewer-dependent — scales with concurrent live viewers and PTZ session length; needs a real per-unit data plan estimate once viewer volume is modeled</td></tr>
-            <tr><td>Firmware OTA</td><td>Piggybacks on controller's LTE-M/NB-IoT link</td><td>Occasional spikes at update time; scheduled during low-activity windows</td></tr>
+            <tr><td>Controller telemetry + GPS (shared Notecard, per container)</td><td>LTE-M/NB-IoT, 500MB included with the Notecard itself, no subscription</td><td class="num">~$0&ndash;5</td></tr>
+            <tr><td>Interior camera (per bay, &times;4)</td><td>Standard LTE, own SIM (Sec. 05)</td><td class="num">~$10&ndash;20 each</td></tr>
           </tbody>
         </table>
       </div>
-      <p>Keeping the two links physically and contractually separate (different SIM, different plan) also means a camera data-plan overage on one unit can't starve that unit's alarm/lock reporting.</p>
+      <h4>Controller — near-free, if batched correctly</h4>
+      <p>Each Notecard includes 500MB of cellular data at purchase with no ongoing subscription. The cloud side (Notehub) is free up to 5,000 "consumption credits" a month, then roughly $0.00075/credit beyond that. The real design lever: whether the host relays each bay's heartbeat as a <strong>separate</strong> Notehub event, or <strong>batches</strong> all four bays into one combined event per cycle. Unbatched (4 bays &times; 288 heartbeats/day + 24 GPS fixes) blows past the free tier — roughly $23/month. Batched into one combined event per 5-minute cycle, total volume drops to about 9,360 events/month, landing close to the free tier — roughly $3&ndash;5/month. <strong>The host should batch</strong> (Sec. 02) — this is a real design requirement this pricing surfaces, not just a cost estimate.</p>
+      <h4>Camera — the real cost driver, and it's 4&times; what "one camera" suggests</h4>
+      <p>Reolink's actual US cellular plans run $5.99/month (1GB) to $65.99/month (20GB), with typical event-based usage around 1&ndash;5GB/month — call it $10&ndash;20/month per camera at moderate use (periodic PTZ viewing during live auctions, not 24/7 streaming). The correction worth flagging: <strong>interior cameras can't be shared across bays</strong> the way the Notecard is — each bay has different sealed contents under separate auction, so each of the four bays needs its own interior camera and its own data plan. That's <strong>4 separate camera data plans per facility, not one</strong> — roughly $40&ndash;80/month in camera data alone, dwarfing the controller side. Whether exterior/security cameras can share a wider-angle vantage point covering multiple bay doors (Sec. 06) — and so share a data plan — versus also needing one per bay isn't resolved (Sec. 13).</p>
+      <p>Keeping the controller and camera links physically and contractually separate (different SIM, different plan per link) also means a camera data-plan overage on one bay can't starve that bay's alarm/lock reporting.</p>
     </section>
 
     <section class="block" id="backend">
@@ -585,7 +588,7 @@
         <li class="open-item"><span class="mark">?</span><span><strong>Duty-cycle assumptions</strong><span class="note">Every component in Sec. 06 now has a sourced current-draw figure, but three duty-cycle assumptions still need bench/field validation: telemetry/GPS session length, how often the PIR actually triggers, and the lighting dimming/motion-boost split.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Siren specific part</strong><span class="note">Siren/strobe peak draw (500 mA) is still an unsourced placeholder — the door/motion/tamper/smoke/lighting rows now have real component picks, this one doesn't yet.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standards are set (Sec. 06: 10 Ah/bay, 2 Ah for the Notecard); both move once the duty-cycle assumptions above are validated.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Cellular data plan costs</strong><span class="note">Both the low-bandwidth controller plan and the camera's viewer-dependent plan need real pricing once volumes are estimated.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Exterior camera data-plan sharing</strong><span class="note">Sec. 07 prices four separate interior-camera data plans per facility (~$40&ndash;80/mo total) since those can't be shared — whether exterior/security cameras can share one wider-angle data plan across bays instead of needing four more isn't resolved.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>RS-485 transceiver &amp; I2C&ndash;RS-485 bridge parts</strong><span class="note">Sec. 02 specifies MAX485-class for the inter-bay bus and a dedicated I2C&ndash;RS-485 bridge IC (no custom firmware) next to the Notecard, but neither has a specific part chosen, and physical wiring/connector routing across the four bays isn't laid out.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Bridge redundancy</strong><span class="note">The 4-way host failover in Sec. 02 removes the old A/B-only limit but introduces the I2C&ndash;RS-485 bridge as a new single point of failure for Notecard access — undecided whether a single bridge is acceptable or whether it needs its own backup.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>igloohome Wi-Fi Bridge coverage per lock</strong><span class="note">Sec. 04 assumes it's plausible for one bridge to cover all four bays' locks over Bluetooth, but that hasn't been confirmed against igloohome's actual per-bridge lock limit.</span></span></li>
@@ -610,11 +613,16 @@
       <ul class="plain">
         <li><a href="https://dev.blues.io/datasheets/notecard-datasheet/note-nbgl/">Notecard Datasheet — NOTE-NBGL — Blues</a> (idle/active current, BG95-M3 module, GNSS)</li>
         <li><a href="https://blues.com/products/notecard/notecard-cellular/">Notecard Cellular — Blues</a> (operating temperature range)</li>
+        <li><a href="https://blues.com/pricing/">Simplified IoT Pricing — Blues</a> (500MB included data, Notehub consumption-credit pricing)</li>
       </ul>
       <h3>Sensors &amp; lighting</h3>
       <ul class="plain">
         <li><a href="https://www.elprocus.com/hc-sr501-pir-sensor/">HC-SR501 PIR Sensor Datasheet — elprocus</a></li>
         <li><a href="https://www.pottersignal.com/product/datasheet/8840007_ps242.pdf">PS-24 Photoelectric Smoke Detector Datasheet — Potter Signal</a></li>
+      </ul>
+      <h3>Camera connectivity</h3>
+      <ul class="plain">
+        <li><a href="https://reolink.com/blog/reolink-subscription-cost/">Does Reolink Require a Subscription? — Reolink</a> (US cellular data plan pricing, typical usage)</li>
       </ul>
       <h3>Battery</h3>
       <ul class="plain">
