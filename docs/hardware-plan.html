@@ -195,7 +195,8 @@
     <p class="subhead">Hardware and software architecture for a self-contained, solar-powered control unit monitoring and securing an individual storage/auction container section: alarm, safety lighting, access lock, sensors, camera, and the backend that all of it reports to.</p>
     <div class="stat-strip">
       <div class="stat-cell"><span class="k">Power</span><span class="v">Solar + battery, per unit</span></div>
-      <div class="stat-cell"><span class="k">Controller</span><span class="v">ESP32 + Blues Notecard (Cell+GPS)</span></div>
+      <div class="stat-cell"><span class="k">Controller</span><span class="v">1 ESP32/bay, 1 shared Notecard/container</span></div>
+      <div class="stat-cell"><span class="k">Battery autonomy</span><span class="v">3 days no-sun, per bay + Notecard</span></div>
       <div class="stat-cell"><span class="k">Connectivity</span><span class="v">Cellular (LTE-M/NB-IoT + LTE)</span></div>
       <div class="stat-cell"><span class="k">Uplink protocol</span><span class="v">MQTT over TLS</span></div>
       <div class="stat-cell"><span class="k">Lock model</span><span class="v">Standalone smart padlock, cloud-correlated</span></div>
@@ -287,17 +288,30 @@
         <li><strong>OTA updates:</strong> signed firmware images pulled from the backend on a maintenance window, staged to a secondary flash partition, only committed after a successful post-update self-test — failed boot rolls back automatically.</li>
       </ul>
 
-      <h3>Scaling to a 4-bay container</h3>
-      <p>The default above is one controller per bay. It's worth checking whether one ESP32 could instead run all four bays of a single container, since that would cut the controller count 4&times; — but the pin budget doesn't leave room for it.</p>
-      <p>An ESP32-WROOM-32 has 33 GPIO pins; 6 are reserved for the module's integrated SPI flash, leaving 27. Four of those 27 are input-only. Four bays' worth of sensors and actuators need:</p>
-      <ul class="plain">
-        <li>16 digital inputs (door, motion, tamper, smoke &times; 4 bays)</li>
-        <li>8 outputs (siren + lighting driver &times; 4 bays)</li>
-        <li>2 pins for the shared I2C bus to the Notecard</li>
-        <li>1 ADC pin for battery/solar voltage sense</li>
-      </ul>
-      <p>That's 27 pins against 27 available — a fit with <strong>zero margin</strong>, no spare pin for a status LED or a future sensor, and full reliance on the strapping pins (GPIO0, 2, 5, 12, 15), which firmware engineers normally avoid loading up for boot-reliability reasons. Technically possible; not a design worth shipping.</p>
-      <div class="callout"><strong>Recommendation:</strong> keep one small ESP32 per bay (cheap, ~$5&ndash;10 each, ample I/O headroom for a single bay's ~7 pins) rather than one shared controller for all four. Share only the expensive, certified part — the Notecard — across all four bays over a local bus (I2C/UART), with each bay's ESP32 talking to it in turn. This keeps the 4&times; cost savings on the part that actually costs money and needs cellular billing, while avoiding both the pin crunch and the bigger issue: a single shared controller means one firmware crash or hardware fault silently drops alarm and lock-correlation monitoring for all four bays at once, which runs against the failure-isolation principle in Sec. 10.</div>
+      <h3>4-bay container topology (decided)</h3>
+      <p>One ESP32 per bay — not a single shared controller. An ESP32-WROOM-32 has only 27 usable GPIO pins after excluding the 6 reserved for integrated flash, and four bays' worth of sensors and actuators (16 inputs, 8 outputs, a bus, and a battery-sense ADC pin) consume exactly 27 of them — a zero-margin fit that relies on every strapping pin and leaves nothing spare. One small ESP32 per bay instead gives each bay comfortable headroom on its own ~7 pins, and keeps a firmware crash or hardware fault on one bay from silently dropping alarm and lock-correlation monitoring for the other three (Sec. 10's failure-isolation principle).</p>
+      <p>What's shared across the four is only the expensive, certified part: the Notecard. One bay is designated the <strong>host</strong> — its ESP32 has the Notecard wired directly over I2C, same as the single-bay design. The other three <strong>satellite</strong> bays don't talk to the Notecard at all; each publishes its own telemetry and events to the host over a shared bus, and the host forwards everything through its one Notecard to the backend.</p>
+      <div class="diagram">
+        <div class="diagram-row">
+          <div class="diagram-node">Bay B ESP32</div>
+          <div class="diagram-node">Bay C ESP32</div>
+          <div class="diagram-node">Bay D ESP32</div>
+        </div>
+        <div class="diagram-row">
+          <span class="diagram-arrow">&darr;&nbsp;&darr;&nbsp;&darr;&nbsp;RS-485 bus</span>
+        </div>
+        <div class="diagram-row">
+          <div class="diagram-node hub">Bay A ESP32 (host)</div>
+          <span class="diagram-arrow">&rarr;</span>
+          <div class="diagram-node hub">Notecard (own battery)</div>
+          <span class="diagram-arrow">&rarr;</span>
+          <div class="diagram-node cloud">Backend</div>
+        </div>
+        <p class="diagram-caption">Each bay keeps its own ESP32, sensors, and battery. Only the Notecard and its bus are shared.</p>
+      </div>
+      <p>The bus matters: a shipping container is roughly 40 ft across all four bays, well beyond what I2C tolerates without extender hardware. <strong>RS-485</strong> is the standard choice for exactly this — differential, multi-drop, built for tens of meters over cheap twisted pair, with well-supported transceiver chips (MAX485-class) that bridge to any ESP32 UART. Each satellite bay needs one added transceiver chip; the UART connection still only costs 2 GPIO pins, so the per-bay pin budget from Sec. 03/06 doesn't change.</p>
+      <p>The Notecard itself draws from a small <strong>dedicated battery</strong>, not the host bay's own battery. Piggybacking it on Bay A's battery would mean a shading or fault issue on one specific bay takes out cellular reporting for the whole container — the same single-point-of-failure problem the per-bay ESP32 decision was meant to avoid, just moved one layer up. A dedicated battery decouples container-wide connectivity from any one bay's power fate (sizing in Sec. 06).</p>
+      <div class="callout"><strong>Residual single point of failure:</strong> the host ESP32 itself is still one device — if it crashes or fails, the other three bays' <em>local</em> alarm and lighting keep working (each bay's own controller and battery are untouched), but all four bays lose cellular reporting until the host recovers or is replaced. Worth deciding whether that's an acceptable residual risk or whether host failover needs designing in (Sec. 12).</div>
     </section>
 
     <section class="block" id="sensors">
@@ -371,7 +385,8 @@
 
     <section class="block" id="power">
       <div class="block-tag"><span class="code">SPEC&#8209;06</span><h2>Power budget</h2></div>
-      <p>Every row except the charge-controller overhead is now sourced from a published datasheet or a documented industry-class part, not guessed.</p>
+      <p>Two separate budgets now that the Notecard has its own dedicated battery (Sec. 02): one per bay (every bay, including the host, needs this), and one small budget just for the shared Notecard. <strong>3 days of no-sun autonomy is the confirmed design requirement</strong> for both, not an illustrative example.</p>
+      <h3>Per-bay battery (&times;4, one per bay)</h3>
       <div class="table-wrap">
         <table class="data">
           <thead><tr><th>Component</th><th class="num">Quiescent</th><th class="num">Peak</th><th>Duty cycle</th><th class="num">Avg. daily draw</th></tr></thead>
@@ -380,21 +395,31 @@
             <tr><td>Door + tamper switches (passive)</td><td class="num">&lt;0.1 mA</td><td class="num">&lt;0.1 mA</td><td>100% (pull-up leakage only)</td><td class="num">~2 mAh</td></tr>
             <tr><td>PIR motion sensor</td><td class="num">&lt;2 mA</td><td class="num">65 mA</td><td>~1% (rare triggers while sealed &amp; armed, assumed)</td><td class="num">~63 mAh</td></tr>
             <tr><td>Photoelectric smoke/heat sensor</td><td class="num">0.045 mA</td><td class="num">150 mA</td><td>~100% supervisory; alarm state ~0%</td><td class="num">~1 mAh</td></tr>
-            <tr><td>Notecard cellular + GPS</td><td class="num">0.008 mA</td><td class="num">~250 mA</td><td>288 telemetry sessions/day + 24 GPS fixes/day (session-length assumed, see note)</td><td class="num">~215 mAh</td></tr>
             <tr><td>Siren / strobe</td><td class="num">0 mA</td><td class="num">500 mA</td><td>&lt;1% (alarm events only)</td><td class="num">~5 mAh</td></tr>
             <tr><td>Safety lighting (10W 12V LED)</td><td class="num">0 mA</td><td class="num">~830 mA</td><td>~35% nighttime at a ~20% dimmed baseline, brief motion-boosts to full power (duty assumed)</td><td class="num">~1,793 mAh</td></tr>
             <tr><td>Charge controller overhead</td><td class="num">5 mA</td><td class="num">10 mA</td><td>100%</td><td class="num">~120 mAh</td></tr>
-            <tr class="total"><td>Total (lighting excluded)</td><td></td><td></td><td></td><td class="num">~454 mAh/day</td></tr>
-            <tr class="total"><td>Total (lighting included)</td><td></td><td></td><td></td><td class="num">~2,247 mAh/day</td></tr>
+            <tr class="total"><td>Total (lighting excluded)</td><td></td><td></td><td></td><td class="num">~239 mAh/day</td></tr>
+            <tr class="total"><td>Total (lighting included)</td><td></td><td></td><td></td><td class="num">~2,032 mAh/day</td></tr>
           </tbody>
         </table>
       </div>
-      <p>Two things moved with real numbers in hand. First, the passive switches (door, tamper) turn out to cost almost nothing — the old placeholder bundled them with an assumed "5mA" that never matched a passive component. Second, the lighting fixture's real full-power draw (830mA for a 10W 12V fixture) is higher than the old placeholder, but a dimmed nighttime baseline instead of full brightness brings its daily average down well below the old estimate. Lighting remains the dominant load by a wide margin either way.</p>
-      <div class="callout info"><strong>Sourced:</strong> ESP32 figures from Espressif's current-consumption guidance; Notecard from Blues' NOTE-NBGL datasheet; PIR from HC-SR501-class module specs; smoke detector supervisory/alarm current from a Potter Signal-class 12V-bus photoelectric module; LED fixture draw from Ohm's law on a representative 10W/12V product spec. <strong>Duty cycles for the PIR (how often it actually triggers) and the lighting dimming/motion-boost split are deployment assumptions, not datasheet values</strong> — same caveat as the telemetry session length below, all three need bench/field validation once real firmware and fixtures are in hand (Sec. 12).</div>
-      <h4>Sizing formula</h4>
-      <p>Battery capacity (Ah) &ge; daily draw (Ah) &times; autonomy days &divide; usable depth-of-discharge. Example at 3 days of no-sun autonomy, 80% usable DoD on LiFePO4: 2.25&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>8.4 Ah minimum</strong> — round up for margin (e.g. 10 Ah). Solar panel sizing follows from daily Wh needed &divide; average peak sun hours &divide; system efficiency (~0.8 typical for charge-controller + wiring losses).</p>
+      <p><strong>Per-bay battery sizing</strong> at 3 days of no-sun autonomy, 80% usable DoD on LiFePO4: 2.03&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>7.6 Ah minimum &rarr; 10 Ah</strong> with margin. This is what every one of the four bays carries, host included — the host's own sensors/siren/lighting draw the same as any satellite bay, since the Notecard now runs off its own separate battery instead of Bay A's.</p>
+
+      <h3>Shared Notecard battery (&times;1 per container)</h3>
+      <div class="table-wrap">
+        <table class="data compact">
+          <thead><tr><th>Component</th><th class="num">Quiescent</th><th class="num">Peak</th><th class="num">Avg. daily draw</th></tr></thead>
+          <tbody>
+            <tr><td>Notecard cellular + GPS</td><td class="num">0.008 mA</td><td class="num">~250 mA</td><td class="num">~215 mAh</td></tr>
+            <tr><td>RS-485 transceiver + host-side overhead</td><td class="num">2 mA</td><td class="num">10 mA</td><td class="num">~50 mAh</td></tr>
+            <tr class="total"><td>Total</td><td></td><td></td><td class="num">~265 mAh/day</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Notecard battery sizing</strong> at the same 3-day/80% DoD standard: 0.265&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>1 Ah minimum &rarr; 2 Ah</strong> with margin — small enough that a compact dedicated cell plus a small trickle solar panel is a cheap way to buy the reliability of not tying container-wide connectivity to Bay A's power specifically.</p>
+      <div class="callout info"><strong>Sourced:</strong> ESP32 figures from Espressif's current-consumption guidance; Notecard from Blues' NOTE-NBGL datasheet; PIR from HC-SR501-class module specs; smoke detector supervisory/alarm current from a Potter Signal-class 12V-bus photoelectric module; LED fixture draw from Ohm's law on a representative 10W/12V product spec. <strong>Duty cycles for the PIR, the lighting dimming/motion-boost split, and telemetry session length are deployment assumptions, not datasheet values</strong> — all three need bench/field validation once real firmware and fixtures are in hand (Sec. 12). RS-485 transceiver overhead is a rough placeholder, not yet sourced from a specific part.</div>
       <div class="callout info"><strong>Sizing standard:</strong> size to a conservative worst-case sun-hour assumption (a low-sun winter reference site) rather than tuning per install location — one hardware spec that works everywhere, instead of a per-site solar calculation for every new facility.</div>
-      <div class="callout"><strong>Battery chemistry:</strong> LiFePO4 recommended over other lithium chemistries for outdoor, unattended, thermally-exposed deployment — more stable under heat and vibration, safer failure mode.</div>
+      <div class="callout"><strong>Battery chemistry:</strong> LiFePO4 for both the per-bay and Notecard batteries — more stable under heat and vibration than other lithium chemistries, safer failure mode, appropriate for outdoor unattended deployment.</div>
     </section>
 
     <section class="block" id="connectivity">
@@ -465,8 +490,10 @@
         <li class="open-item"><span class="mark">?</span><span><strong>Camera vendor API access</strong><span class="note">The relay approach (Sec. 05) assumes an API suitable for pulling and re-serving the stream — needs confirming against the actual camera vendor's offering.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Duty-cycle assumptions</strong><span class="note">Every component in Sec. 06 now has a sourced current-draw figure, but three duty-cycle assumptions still need bench/field validation: telemetry/GPS session length, how often the PIR actually triggers, and the lighting dimming/motion-boost split.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Siren specific part</strong><span class="note">Siren/strobe peak draw (500 mA) is still an unsourced placeholder — the door/motion/tamper/smoke/lighting rows now have real component picks, this one doesn't yet.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standard is worst-case (Sec. 06); the 8.4 Ah minimum there is a real estimate now, but still moves once the duty-cycle assumptions above are validated.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standards are set (Sec. 06: 10 Ah/bay, 2 Ah for the Notecard); both move once the duty-cycle assumptions above are validated.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Cellular data plan costs</strong><span class="note">Both the low-bandwidth controller plan and the camera's viewer-dependent plan need real pricing once volumes are estimated.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>RS-485 transceiver part &amp; wiring</strong><span class="note">Sec. 02 specifies RS-485 for the inter-bay bus and MAX485-class as the transceiver family, but no specific part is chosen, and physical wiring/connector routing across the four bays isn't laid out.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Host-bay failover</strong><span class="note">Sec. 02 flags that a host ESP32 failure drops cellular reporting for all four bays, even though each bay's local alarm keeps working — undecided whether that residual risk is acceptable or needs a failover design (e.g. a satellite that can take over as host).</span></span></li>
       </ul>
     </section>
 
