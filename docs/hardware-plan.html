@@ -222,6 +222,7 @@
       <li><a href="#commissioning"><span class="n">11</span>Provisioning &amp; commissioning</a></li>
       <li><a href="#environment"><span class="n">12</span>Environmental parameters</a></li>
       <li><a href="#open"><span class="n">13</span>Open engineering questions</a></li>
+      <li><a href="#references"><span class="n">14</span>References</a></li>
     </ol>
   </nav>
 
@@ -592,6 +593,42 @@
         <li class="open-item"><span class="mark">?</span><span><strong>PIN list reset cadence</strong><span class="note">The 285-lifetime cap (Sec. 04) means "Clear PIN list" becomes a recurring maintenance task, not a one-time setup step — no cadence or procedure defined yet for when a lock approaches the cap, and whether it's done remotely (with the Wi-Fi Bridge) or folded into a physical site visit if the bridge isn't installed.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Enclosure interior temperature, measured</strong><span class="note">Sec. 12 flags real risk of exceeding the Notecard's +75&deg;C ceiling inside a sun-loaded steel container — needs an actual field measurement, not just the mitigation plan.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Vibration/shock standard</strong><span class="note">Sec. 12 flags this as unvalidated against any real standard for a relocatable-container deployment — needs one chosen (e.g. an automotive or MIL-STD-810-style shock/vibe profile) and tested against.</span></span></li>
+      </ul>
+    </section>
+
+    <section class="block" id="references">
+      <div class="block-tag"><span class="code">SPEC&#8209;14</span><h2>References</h2></div>
+      <p>Every sourced figure in this document traces back to one of these — grouped by what they back up.</p>
+      <h3>ESP32 &amp; power</h3>
+      <ul class="plain">
+        <li><a href="https://www.mouser.com/datasheet/2/891/esp-wroom-32_datasheet_en-1223836.pdf">ESP32-WROOM-32 Datasheet — Espressif / Mouser</a> (GPIO count, operating temperature, active current)</li>
+        <li><a href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/current-consumption-measurement-modules.html">Current Consumption Measurement of Modules — Espressif ESP-IDF docs</a></li>
+        <li><a href="https://lastminuteengineers.com/esp32-sleep-modes-power-consumption/">Insight Into ESP32 Sleep Modes &amp; Their Power Consumption — Last Minute Engineers</a> (light/deep-sleep current)</li>
+      </ul>
+      <h3>Notecard (cellular + GPS)</h3>
+      <ul class="plain">
+        <li><a href="https://dev.blues.io/datasheets/notecard-datasheet/note-nbgl/">Notecard Datasheet — NOTE-NBGL — Blues</a> (idle/active current, BG95-M3 module, GNSS)</li>
+        <li><a href="https://blues.com/products/notecard/notecard-cellular/">Notecard Cellular — Blues</a> (operating temperature range)</li>
+      </ul>
+      <h3>Sensors &amp; lighting</h3>
+      <ul class="plain">
+        <li><a href="https://www.elprocus.com/hc-sr501-pir-sensor/">HC-SR501 PIR Sensor Datasheet — elprocus</a></li>
+        <li><a href="https://www.pottersignal.com/product/datasheet/8840007_ps242.pdf">PS-24 Photoelectric Smoke Detector Datasheet — Potter Signal</a></li>
+      </ul>
+      <h3>Battery</h3>
+      <ul class="plain">
+        <li><a href="https://battlebornbatteries.com/blogs/academy/understanding-temperature-limits-of-lifepo4-batteries-the-battle-born-educational-series">Understanding Temperature Limits of LiFePO4 Batteries — Battle Born Batteries</a> (charging floor, capacity derating)</li>
+      </ul>
+      <h3>Lock (igloohome Padlock 2)</h3>
+      <ul class="plain">
+        <li><a href="https://www.igloohome.co/how-it-works">How igloohome Smart Locks Work — igloohome</a> (offline AlgoPIN validation)</li>
+        <li><a href="https://www.igloohome.co/blog/accessanywhere-igloohome-smart-lock-offline-access">Behind AccessAnywhere&trade;: igloohome Smart Locks Technology — igloohome</a></li>
+        <li><a href="https://docs.seam.co/device-and-system-integration-guides/igloohome-locks">igloohome Locks Integration Guide — Seam</a> (Wi-Fi Bridge remote lock/unlock)</li>
+        <li><a href="https://support.igloohome.co/support/solutions/articles/35000013907-why-can-t-i-generate-pin-codes-">Why can't I generate PIN codes? — igloohome Support</a> (285-lifetime cap, 3-per-date throttle)</li>
+        <li><a href="https://support.igloohome.co/support/solutions/articles/35000013905-can-i-create-more-than-1-master-pin-code-">Can I create more than 1 Master PIN code? — igloohome Support</a></li>
+        <li><a href="https://support.igloohome.co/support/solutions/articles/35000013838-how-do-i-reset-pin-codes-">How do I reset PIN codes? — igloohome Support</a> (remote clear via Bridge, 7m range)</li>
+        <li><a href="https://support.igloohome.co/support/solutions/articles/35000183360-duration-pins">Duration PINs — igloohome Support</a> (automatic expiration, 28-day window cap)</li>
+        <li><a href="https://www.igloohome.co/products/bridge">igloohome Bridge — igloohome</a></li>
       </ul>
     </section>
 
