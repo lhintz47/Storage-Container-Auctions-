@@ -1,0 +1,358 @@
+<title>Container Auctions Unit Economics</title>
+<style>
+  :root {
+    --paper: #edeff2;
+    --paper-raised: #ffffff;
+    --paper-sunken: #e1e5ea;
+    --ink: #171b22;
+    --ink-muted: #4c5566;
+    --ink-faint: #7c869a;
+    --line: #d1d7e0;
+    --line-strong: #aab3c4;
+    --accent: #2d4159;
+    --accent-ink: #ffffff;
+    --cost: #a1481f;
+    --cost-bg: #f5e4da;
+    --revenue: #1f7a5c;
+    --revenue-bg: #e0f0e8;
+    --open: #a13a3a;
+    --open-bg: #f6e3e0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12161c;
+      --paper-raised: #1a2029;
+      --paper-sunken: #0d1116;
+      --ink: #e7eaef;
+      --ink-muted: #9aa4b5;
+      --ink-faint: #67728a;
+      --line: #262e3a;
+      --line-strong: #38445a;
+      --accent: #7b9cc4;
+      --accent-ink: #0e1520;
+      --cost: #d97a4c;
+      --cost-bg: #2e1c12;
+      --revenue: #4fc298;
+      --revenue-bg: #12281f;
+      --open: #e08484;
+      --open-bg: #2e1c1c;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #12161c;
+    --paper-raised: #1a2029;
+    --paper-sunken: #0d1116;
+    --ink: #e7eaef;
+    --ink-muted: #9aa4b5;
+    --ink-faint: #67728a;
+    --line: #262e3a;
+    --line-strong: #38445a;
+    --accent: #7b9cc4;
+    --accent-ink: #0e1520;
+    --cost: #d97a4c;
+    --cost-bg: #2e1c12;
+    --revenue: #4fc298;
+    --revenue-bg: #12281f;
+    --open: #e08484;
+    --open-bg: #2e1c1c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+
+  .mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .manifest-head { background: var(--paper-sunken); border-bottom: 1px solid var(--line-strong); padding: 2.6rem 1.5rem 1.8rem; }
+  .manifest-inner { max-width: 1000px; margin: 0 auto; }
+  .stamp-row { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 1rem; margin-bottom: 0.6rem; }
+  .stamp-row .doc-code { font-family: ui-monospace, monospace; font-size: 0.76rem; letter-spacing: 0.08em; color: var(--ink-faint); text-transform: uppercase; }
+
+  h1.title { font-weight: 800; font-size: clamp(1.7rem, 3.2vw, 2.4rem); letter-spacing: 0.01em; margin: 0 0 0.3rem; text-wrap: balance; }
+  .subhead { color: var(--ink-muted); font-size: 1.02rem; max-width: 68ch; margin: 0 0 1.6rem; }
+
+  .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--line-strong); border: 1px solid var(--line-strong); }
+  .stat-cell { background: var(--paper-raised); padding: 0.7rem 0.9rem; }
+  .stat-cell .k { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); font-weight: 700; display: block; margin-bottom: 0.2rem; }
+  .stat-cell .v { font-weight: 700; font-size: 0.92rem; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 2.4rem 1.5rem 5rem; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 2.8rem; align-items: start; }
+
+  nav.toc { position: sticky; top: 1.6rem; font-size: 0.82rem; }
+  nav.toc .toc-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.66rem; font-weight: 700; color: var(--ink-faint); margin-bottom: 0.7rem; display: block; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
+  nav.toc a { display: block; padding: 0.32rem 0 0.32rem 0.8rem; margin-left: -2px; border-left: 2px solid transparent; color: var(--ink-muted); text-decoration: none; }
+  nav.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  nav.toc .n { color: var(--ink-faint); margin-right: 0.35em; font-family: ui-monospace, monospace; }
+
+  main { min-width: 0; }
+  section.block { margin-bottom: 3rem; scroll-margin-top: 1.5rem; }
+  .block-tag { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem; }
+  .block-tag .code { font-family: ui-monospace, monospace; font-size: 0.7rem; letter-spacing: 0.06em; background: var(--ink); color: var(--paper); padding: 0.2rem 0.5rem; border-radius: 2px; }
+
+  h2 { font-weight: 800; letter-spacing: 0.01em; font-size: 1.1rem; margin: 0; text-wrap: balance; }
+  h3 { font-weight: 700; font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-muted); margin: 1.5rem 0 0.6rem; }
+  h4 { font-weight: 700; font-size: 0.86rem; margin: 1.1rem 0 0.4rem; }
+
+  p { max-width: 72ch; margin: 0 0 0.9rem; }
+  .block > p:first-of-type { margin-top: 0; }
+  ul.plain, ol.plain { max-width: 72ch; padding-left: 1.2rem; margin: 0 0 0.9rem; }
+  ul.plain li, ol.plain li { margin-bottom: 0.4rem; }
+
+  .callout { border-left: 3px solid var(--accent); background: var(--paper-raised); padding: 0.75rem 1rem; max-width: 68ch; font-size: 0.9rem; margin: 0.9rem 0; }
+  .callout strong { color: var(--accent); }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line-strong); margin-bottom: 0.9rem; }
+  table.data { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.85rem; }
+  table.data th, table.data td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0.55rem 0.75rem; text-align: left; vertical-align: top; }
+  table.data th:last-child, table.data td:last-child { border-right: none; }
+  table.data thead th { text-transform: uppercase; font-size: 0.66rem; letter-spacing: 0.06em; background: var(--paper-sunken); color: var(--ink-muted); }
+  table.data tbody tr:last-child td { border-bottom: none; }
+  table.data td.num, table.data th.num { font-family: ui-monospace, monospace; text-align: right; }
+  table.data tr.total td { font-weight: 700; background: var(--paper-sunken); }
+  table.data td.cost-cell { color: var(--cost); font-weight: 700; }
+  table.data td.rev-cell { color: var(--revenue); font-weight: 700; }
+
+  .tag { display: inline-block; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.15rem 0.5rem; border-radius: 2px; }
+  .tag.cost { background: var(--cost-bg); color: var(--cost); }
+  .tag.revenue { background: var(--revenue-bg); color: var(--revenue); }
+  .tag.passthrough { background: var(--paper-sunken); color: var(--ink-muted); }
+  .tag.deposit { background: var(--paper-sunken); color: var(--ink-muted); }
+
+  .scenario-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line-strong); border: 1px solid var(--line-strong); margin: 1rem 0 1.2rem; }
+  .scenario-cell { background: var(--paper-raised); padding: 1rem 1.1rem; }
+  .scenario-cell h4 { margin: 0 0 0.6rem; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.04em; color: var(--ink-faint); }
+  .scenario-cell .big { font-size: 1.3rem; font-weight: 800; display: block; margin-bottom: 0.3rem; }
+  .scenario-cell .line { display: flex; justify-content: space-between; font-size: 0.82rem; padding: 0.15rem 0; border-bottom: 1px dashed var(--line); }
+  .scenario-cell .line:last-child { border-bottom: none; }
+
+  .open-list { list-style: none; padding: 0; margin: 0.8rem 0 0; max-width: 72ch; }
+  .open-item { display: grid; grid-template-columns: 22px 1fr; gap: 0.5rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+  .open-item:last-child { border-bottom: none; }
+  .open-item .mark { color: var(--open); background: var(--open-bg); font-family: ui-monospace, monospace; font-size: 0.7rem; text-align: center; border-radius: 2px; padding: 0.15rem 0; height: fit-content; }
+  .open-item strong { display: block; margin-bottom: 0.1rem; }
+  .open-item span.note { color: var(--ink-muted); font-size: 0.86rem; }
+
+  @media (max-width: 720px) {
+    .page { grid-template-columns: 1fr; }
+    nav.toc { position: static; border-bottom: 1px solid var(--line); padding-bottom: 1rem; margin-bottom: 0.5rem; }
+    nav.toc ol { columns: 2; border-left: none; }
+    nav.toc a { border-left: none; padding-left: 0; }
+    table.data { min-width: 540px; }
+    .scenario-row { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="manifest-head">
+  <div class="manifest-inner">
+    <div class="stamp-row">
+      <span class="doc-code">ECON // COST &amp; PRICING MODEL</span>
+      <span class="doc-code">STATUS: DIRECTIONAL — KEY INPUTS STILL UNSOURCED</span>
+    </div>
+    <h1 class="title">Container Auctions Unit Economics</h1>
+    <p class="subhead">What it actually costs to build and run one facility, what the platform charges whom for what, and whether the math holds together — with every assumption marked as sourced or estimated.</p>
+    <div class="stat-strip">
+      <div class="stat-cell"><span class="k">Revenue model</span><span class="v">15% buyer's premium + 10% seller commission</span></div>
+      <div class="stat-cell"><span class="k">Payment processing</span><span class="v">Stripe: 2.9% + $0.30/charge</span></div>
+      <div class="stat-cell"><span class="k">Insurance (sourced)</span><span class="v">~$67&ndash;129/mo, $1M/$2M GL</span></div>
+      <div class="stat-cell"><span class="k">Biggest cost gaps</span><span class="v">Cellular data, labor, controller SKU</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <nav class="toc" aria-label="Sections">
+    <span class="toc-label">Contents</span>
+    <ol>
+      <li><a href="#overview"><span class="n">01</span>Cost model overview</a></li>
+      <li><a href="#capex"><span class="n">02</span>CapEx — per-facility build-out</a></li>
+      <li><a href="#opex"><span class="n">03</span>OpEx — recurring costs</a></li>
+      <li><a href="#services"><span class="n">04</span>What's actually charged, to whom</a></li>
+      <li><a href="#perauction"><span class="n">05</span>Per-auction economics</a></li>
+      <li><a href="#breakeven"><span class="n">06</span>Break-even &amp; volume</a></li>
+      <li><a href="#pricing"><span class="n">07</span>Pricing strategy</a></li>
+      <li><a href="#risk"><span class="n">08</span>Sensitivity &amp; risk</a></li>
+      <li><a href="#open"><span class="n">09</span>Open questions</a></li>
+      <li><a href="#references"><span class="n">10</span>References</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section class="block" id="overview">
+      <div class="block-tag"><span class="code">ECON&#8209;01</span><h2>Cost model overview</h2></div>
+      <p>Two different kinds of money, kept separate throughout this doc: <span class="tag cost">CapEx</span> — spent once to build a facility — and <span class="tag cost">OpEx</span> — spent every month to keep it running, regardless of how many auctions actually close. Revenue is <span class="tag revenue">per-transaction</span>, tied to auctions actually completing. The business only works if per-transaction revenue at a realistic volume covers OpEx and pays back CapEx in a reasonable window — that's the question this document is actually trying to answer, not just list numbers.</p>
+      <p>Where a number below is real (sourced from a vendor or a market rate), it's marked. Where it's a placeholder standing in for a number nobody has quoted yet, that's marked too — this document is not ready to hand to an investor as-is (see the Funding Plan for that gap explicitly).</p>
+    </section>
+
+    <section class="block" id="capex">
+      <div class="block-tag"><span class="code">ECON&#8209;02</span><h2>CapEx — per-facility build-out</h2></div>
+      <p>One facility = four bays, the standard unit from the business plan.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Line item</th><th class="num">Est. cost</th><th>Basis</th></tr></thead>
+          <tbody>
+            <tr><td>Lock hardware (igloohome Padlock 2, &times;4)</td><td class="num">$740</td><td>Sourced: $184.99 &times; 4</td></tr>
+            <tr><td>Lock box shroud (Container One, &times;4)</td><td class="num">$259</td><td>Sourced: $64.80 &times; 4</td></tr>
+            <tr><td>Batteries (4&times;10Ah bay + 1&times;2Ah shared, LiFePO4)</td><td class="num">$300&ndash;500</td><td>Refined estimate: small-format LiFePO4 packs run higher than the ~$2.65/Ah reference rate for large 200Ah packs, since fixed BMS/case cost doesn't shrink with capacity</td></tr>
+            <tr><td>Controller (ESP32 &times;4)</td><td class="num">$400&ndash;800</td><td>Rough estimate — exact SKU still an open item (Container Control System, Sec. 13)</td></tr>
+            <tr><td>Shared Notecard + camera hardware</td><td class="num">$1,000&ndash;2,000</td><td>Rough estimate — camera vendor cost not yet sourced</td></tr>
+            <tr><td>Solar panels (&times;4 bay + shared)</td><td class="num">Not yet estimated</td><td>Open — no wattage/vendor chosen</td></tr>
+            <tr><td>Site prep (pad, per business plan Sec. 02 spec)</td><td class="num">$5,000&ndash;15,000</td><td>Rough estimate, highly site-dependent</td></tr>
+            <tr><td>Legal (securities/business attorney, entity, Form C if crowdfunded)</td><td class="num">$10,000&ndash;25,000</td><td>Rough estimate — get real quotes</td></tr>
+            <tr><td>Platform software (bidding, forms, deposits)</td><td class="num">Variable</td><td>Build-vs-buy not yet decided</td></tr>
+            <tr class="total"><td>Known/sourced subtotal (hardware only)</td><td class="num">~$1,300&ndash;1,500</td><td>The small, confident part of the total</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout"><strong>Read this honestly:</strong> the parts with real vendor pricing add up to roughly $1,300&ndash;1,500 per facility — a small fraction of the total. Site prep, legal, and software are the real cost drivers, and none of them have a firm quote yet. Don't let the precision of the hardware numbers create false confidence about the total.</div>
+    </section>
+
+    <section class="block" id="opex">
+      <div class="block-tag"><span class="code">ECON&#8209;03</span><h2>OpEx — recurring costs</h2></div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Line item</th><th class="num">Est. monthly cost</th><th>Basis</th></tr></thead>
+          <tbody>
+            <tr><td>General liability insurance ($1M/$2M)</td><td class="num">$67&ndash;129</td><td>Sourced: small self-storage business rate range</td></tr>
+            <tr><td>Property insurance (hardware, containers, contents-in-transit)</td><td class="num">Not yet estimated</td><td>Open — a distinct policy from general liability, not yet quoted</td></tr>
+            <tr><td>Controller cellular data (per bay, low-bandwidth)</td><td class="num">Not yet estimated</td><td>Open (Container Control System, Sec. 07)</td></tr>
+            <tr><td>Camera cellular data (viewer-dependent)</td><td class="num">Not yet estimated</td><td>Open, depends on concurrent-viewer volume (Container Control System, Sec. 07)</td></tr>
+            <tr><td>Facility manager labor</td><td class="num">Not yet estimated</td><td>Open — role scope (part-time/on-call vs. dedicated) not yet defined</td></tr>
+            <tr><td>Payment processing</td><td class="num">Transactional, not fixed</td><td>Sourced: Stripe 2.9% + $0.30 per charge (Sec. 05)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Only one OpEx line has a real number attached. The rest — cellular data, property insurance, and labor — are the actual gating unknowns for whether this business is viable at any given auction volume, more than the CapEx build-out cost is.</p>
+    </section>
+
+    <section class="block" id="services">
+      <div class="block-tag"><span class="code">ECON&#8209;04</span><h2>What's actually charged, to whom</h2></div>
+      <p>The business plan defines these individually; this table exists to separate what's <span class="tag revenue">real revenue</span> from what's a <span class="tag deposit">refundable deposit</span> (not revenue unless forfeited) and what's a <span class="tag passthrough">pass-through</span> (collected but not kept). That distinction doesn't exist cleanly anywhere else yet.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Charge</th><th>Paid by</th><th>Rate</th><th>Category</th></tr></thead>
+          <tbody>
+            <tr><td>Buyer's premium</td><td>Bidder</td><td>15% of winning bid</td><td><span class="tag revenue">Revenue</span></td></tr>
+            <tr><td>Seller commission</td><td>Seller</td><td>10% of winning bid</td><td><span class="tag revenue">Revenue</span></td></tr>
+            <tr><td>No-sale use fee</td><td>Seller</td><td>Flat, TBD</td><td><span class="tag revenue">Revenue</span> (only if listing doesn't sell)</td></tr>
+            <tr><td>Bidding deposit</td><td>Bidder</td><td>Flat, TBD</td><td><span class="tag deposit">Deposit</span> — revenue only if forfeited</td></tr>
+            <tr><td>Seller security deposit</td><td>Seller</td><td>Flat, TBD</td><td><span class="tag deposit">Deposit</span> — revenue only if applied to cleanup/no-sale</td></tr>
+            <tr><td>Buyer cleanup deposit</td><td>Buyer</td><td>Flat, TBD</td><td><span class="tag deposit">Deposit</span> — revenue only if forfeited</td></tr>
+            <tr><td>Sales tax</td><td>Bidder</td><td>Per jurisdiction</td><td><span class="tag passthrough">Pass-through</span> — remitted, not kept</td></tr>
+            <tr><td>Facility hosting fee</td><td>Facility owner (if third-party) or absorbed by platform</td><td>Not yet defined</td><td><span class="tag cost">Undefined</span> — real gap, see Sec. 09</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="perauction">
+      <div class="block-tag"><span class="code">ECON&#8209;05</span><h2>Per-auction economics</h2></div>
+      <p>Real winning bids on storage-style auctions vary enormously — reported figures range from under $100 to nearly $1,000, and one experienced buyer cited $1&ndash;$500 as typical for both live and online sales. There's no way to responsibly collapse that into a single "average" — so three scenarios instead, at $100 / $250 / $500 winning bids.</p>
+      <div class="scenario-row">
+        <div class="scenario-cell">
+          <h4>Low — $100 bid</h4>
+          <span class="big">~$21<span style="font-size:0.6em;font-weight:400;"> net</span></span>
+          <div class="line"><span>Premium (15%)</span><span>$15.00</span></div>
+          <div class="line"><span>Commission (10%)</span><span>$10.00</span></div>
+          <div class="line"><span>Gross revenue</span><span>$25.00</span></div>
+          <div class="line"><span>Stripe fee (est.)</span><span>&minus;$3.64</span></div>
+        </div>
+        <div class="scenario-cell">
+          <h4>Mid — $250 bid</h4>
+          <span class="big">~$53<span style="font-size:0.6em;font-weight:400;"> net</span></span>
+          <div class="line"><span>Premium (15%)</span><span>$37.50</span></div>
+          <div class="line"><span>Commission (10%)</span><span>$25.00</span></div>
+          <div class="line"><span>Gross revenue</span><span>$62.50</span></div>
+          <div class="line"><span>Stripe fee (est.)</span><span>&minus;$8.64</span></div>
+        </div>
+        <div class="scenario-cell">
+          <h4>High — $500 bid</h4>
+          <span class="big">~$108<span style="font-size:0.6em;font-weight:400;"> net</span></span>
+          <div class="line"><span>Premium (15%)</span><span>$75.00</span></div>
+          <div class="line"><span>Commission (10%)</span><span>$50.00</span></div>
+          <div class="line"><span>Gross revenue</span><span>$125.00</span></div>
+          <div class="line"><span>Stripe fee (est.)</span><span>&minus;$16.98</span></div>
+        </div>
+      </div>
+      <p>Stripe fee estimated at 2.9% + $0.30 on the bid+premium charge (Sec. 07's sourced rate); doesn't yet include payout fees to sellers or any cross-border/international-card surcharge, which would shave a bit more off net. Cleanup/security deposits aren't in this figure at all since they're not revenue unless forfeited (Sec. 04).</p>
+    </section>
+
+    <section class="block" id="breakeven">
+      <div class="block-tag"><span class="code">ECON&#8209;06</span><h2>Break-even &amp; volume</h2></div>
+      <p>Four bays, each cycling roughly weekly (business plan Sec. 04: ~2 days setup, ~3 days live, ~2 days removal). At full back-to-back utilization that's up to ~4 cycles/bay/month; realistically, for a new site still building bidder demand, call it 2&ndash;3 completed sales per bay per month — <strong>8&ndash;12 completed auctions/month per facility</strong>, not the theoretical maximum.</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Scenario</th><th class="num">Auctions/mo</th><th class="num">Net revenue/mo (mid-bid)</th></tr></thead>
+          <tbody>
+            <tr><td>Conservative (2/bay)</td><td class="num">8</td><td class="num rev-cell">~$424</td></tr>
+            <tr><td>Realistic (2.5/bay)</td><td class="num">10</td><td class="num rev-cell">~$530</td></tr>
+            <tr><td>Optimistic (3/bay)</td><td class="num">12</td><td class="num rev-cell">~$636</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout"><strong>This can't be turned into a real break-even yet.</strong> The revenue side has a defensible range (Sec. 05); the cost side is missing its biggest variables — cellular data, property insurance, and labor (Sec. 03) — so there's no honest way to say whether $424&ndash;636/month in net auction revenue covers monthly OpEx. Filling in those three OpEx lines is the single highest-value next step for this document, ahead of refining anything else.</div>
+    </section>
+
+    <section class="block" id="pricing">
+      <div class="block-tag"><span class="code">ECON&#8209;07</span><h2>Pricing strategy</h2></div>
+      <h3>The existing rates check out against the market</h3>
+      <p>The business plan's 15% buyer's premium isn't an arbitrary number — real storage-auction operators charge winning-bid fees "usually based on a percentage of the winning bid, like 15%" per industry reporting (Sec. 10). That's a useful independent cross-check that the rate is in a normal, defensible range, not a guess that happens to also be a round number.</p>
+      <h3>The real gap: facility hosting</h3>
+      <p>Nowhere in the business, hardware, or funding plans is there a defined answer for what happens if the physical site is hosted by a third-party facility owner rather than owned outright by the platform operator. The business plan's Roles section allows for a Facility Owner distinct from the platform, but no fee or revenue-share arrangement between them is specified. This is worth resolving before approaching any real facility owner as a partner, not after.</p>
+      <h3>Additional revenue, not yet priced</h3>
+      <ul class="plain">
+        <li>Featured/highlighted listings for sellers</li>
+        <li>Expedited or extended access windows</li>
+        <li>Photo/video inventory add-ons at intake</li>
+      </ul>
+      <p>None of these are load-bearing for the core model — they're upside on top of premium + commission, worth pricing once the base model is validated, not before.</p>
+    </section>
+
+    <section class="block" id="risk">
+      <div class="block-tag"><span class="code">ECON&#8209;08</span><h2>Sensitivity &amp; risk</h2></div>
+      <ul class="plain">
+        <li><strong>Bid-value risk:</strong> the low-end scenario ($100 bids, $21 net) is a real possibility, not a tail case — reported winning bids run as low as "under $100." A facility that skews toward low-value sealed sections could sit well below the mid-case revenue this plan otherwise leans on.</li>
+        <li><strong>Utilization risk:</strong> the 8&ndash;12/month volume assumption (Sec. 06) is itself unvalidated — a new site with no bidder base yet could run well below "conservative" for months before demand builds.</li>
+        <li><strong>Unknown OpEx risk:</strong> cellular and labor costs, once real, could each individually be larger than the entire net revenue range modeled in Sec. 06 — this document cannot currently rule that out.</li>
+        <li><strong>Payment risk:</strong> international cards or cross-border transfers add 1&ndash;2%+ on top of the base Stripe rate (Sec. 10) — a real cost if the bidder base isn't purely domestic.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="open">
+      <div class="block-tag"><span class="code">ECON&#8209;09</span><h2>Open questions</h2></div>
+      <ul class="open-list">
+        <li class="open-item"><span class="mark">?</span><span><strong>Cellular data costs</strong><span class="note">Both controller and camera data plans are still unpriced (Container Control System, Sec. 07) — the single biggest OpEx gap in this document.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Facility manager labor model</strong><span class="note">Part-time/on-call vs. dedicated staff isn't decided, so there's no labor cost to model at all yet.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Facility hosting fee structure</strong><span class="note">Sec. 07 flags this as entirely undefined — needed before pitching any third-party facility owner as a host.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Property insurance quote</strong><span class="note">Distinct from the sourced general-liability figure (Sec. 03) — covers the hardware and contents themselves, not yet priced.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Realistic utilization rate</strong><span class="note">The 8&ndash;12 auctions/month range (Sec. 06) is a reasoned estimate, not validated against any real demand data — there is none yet.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Bidding/seller/cleanup deposit amounts</strong><span class="note">Still "TBD" flat figures throughout Sec. 04 — the business plan never set actual dollar amounts, only that deposits are required.</span></span></li>
+      </ul>
+    </section>
+
+    <section class="block" id="references">
+      <div class="block-tag"><span class="code">ECON&#8209;10</span><h2>References</h2></div>
+      <ul class="plain">
+        <li><a href="https://www.underpriced.app/blog/storage-unit-auction-flipping-guide-2026">Storage Unit Auction Flipping Guide 2026 — Underpriced</a> (winning bid range, percentage-based buyer fees)</li>
+        <li><a href="https://www.sidehustlenation.com/storage-unit-auctions/">Storage Unit Auctions — Side Hustle Nation</a> (typical sale price range)</li>
+        <li><a href="https://drop-desk.com/blog/guides/stripe-fees-for-marketplace-operators/">Stripe Fees Explained for Marketplace Operators — DropDesk</a></li>
+        <li><a href="https://ecomcalctools.com/blog/fees-stripe/stripe-connect-fees/">Stripe Connect Fees 2026 — EcomCalcTools</a> (base rate, Express account fees, cross-border surcharges)</li>
+        <li><a href="https://generalliabilityinsure.com/small-business/self-storage-insurance.html">Self-Storage Insurance Cost Guide — General Liability Insure</a></li>
+        <li><a href="https://diysolarforum.com/threads/diy-lifepo4-battery-cost-per-amp-hour-delivered-to-us.10451/">DIY LiFePO4 Battery Cost per Amp Hour — DIY Solar Power Forum</a></li>
+      </ul>
+    </section>
+
+  </main>
+</div>
