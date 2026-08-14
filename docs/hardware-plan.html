@@ -367,7 +367,17 @@
           </ul>
         </div>
       </div>
-      <p>Default to Model A given the current hardware candidate. Revisit Model B only if the lock hardware choice changes toward an integrated (wired) unit — this is one of the open items in Sec. 12.</p>
+      <p>Default to Model A given the current hardware candidate. Revisit Model B only if the lock hardware choice changes toward an integrated (wired) unit — this is one of the open items in Sec. 13.</p>
+
+      <h3>Remote unlock in an emergency</h3>
+      <p>Not a true live "unlock now" push, as the lock is currently speced — and it's worth being explicit about why, rather than assuming a "smart" lock means instant remote actuation.</p>
+      <ul class="plain">
+        <li>The Padlock 2 validates PINs <strong>locally, offline, by default</strong>. It has no persistent connection of its own — codes are generated algorithmically on the backend and checked against a list pre-loaded onto the lock's own chip. There's no live command channel to the bare lock.</li>
+        <li>A genuine instant-unlock command requires igloohome's optional <strong>Wi-Fi Bridge</strong> accessory, which gives the lock real-time connectivity. Without it, the lock has no remote features at all.</li>
+        <li>The bridge needs Wi-Fi at the site — which this design doesn't have anywhere else (Sec. 07's whole reason for existing is that these sites run on cellular, not Wi-Fi). So the standard remote-unlock path likely isn't usable here without adding site Wi-Fi specifically for the bridge, or finding a cellular-connected equivalent.</li>
+      </ul>
+      <p>What works today, with no added hardware: the backend can generate a brand-new valid PIN at any instant and relay it to whoever's on-site — the same mechanism already designed for the fire department code. That gets a responder through the door within seconds without the lock itself ever needing connectivity, which covers the actual emergency scenario (someone present who needs in) even though it isn't a literal remote actuation.</p>
+      <div class="callout"><strong>If true remote actuation is a hard requirement</strong> — e.g. an automated dispatch integration with no one on-site to enter a code — that's a different capability than this lock provides at all, bridge or not, and points back toward Model B: a wired electronic strike or deadbolt the controller can actuate directly, the same alternative already on the table above.</div>
     </section>
 
     <section class="block" id="camera">
@@ -391,7 +401,7 @@
           </ul>
         </div>
       </div>
-      <p>The relay approach is the only one that supports true first-come-first-served PTZ arbitration with a hard cutoff when another viewer requests control — recommended default, contingent on confirming the camera vendor exposes an API suitable for relaying (Sec. 12).</p>
+      <p>The relay approach is the only one that supports true first-come-first-served PTZ arbitration with a hard cutoff when another viewer requests control — recommended default, contingent on confirming the camera vendor exposes an API suitable for relaying (Sec. 13).</p>
     </section>
 
     <section class="block" id="power">
@@ -428,7 +438,7 @@
         </table>
       </div>
       <p><strong>Notecard battery sizing</strong> at the same 3-day/80% DoD standard: 0.265&nbsp;Ah &times; 3 &divide; 0.8 &asymp; <strong>1 Ah minimum &rarr; 2 Ah</strong> with margin — small enough that a compact dedicated cell plus a small trickle solar panel is a cheap way to buy the reliability of not tying container-wide connectivity to Bay A's power specifically.</p>
-      <div class="callout info"><strong>Sourced:</strong> ESP32 figures from Espressif's current-consumption guidance; Notecard from Blues' NOTE-NBGL datasheet; PIR from HC-SR501-class module specs; smoke detector supervisory/alarm current from a Potter Signal-class 12V-bus photoelectric module; LED fixture draw from Ohm's law on a representative 10W/12V product spec. <strong>Duty cycles for the PIR, the lighting dimming/motion-boost split, and telemetry session length are deployment assumptions, not datasheet values</strong> — all three need bench/field validation once real firmware and fixtures are in hand (Sec. 12). RS-485 transceiver overhead is a rough placeholder, not yet sourced from a specific part.</div>
+      <div class="callout info"><strong>Sourced:</strong> ESP32 figures from Espressif's current-consumption guidance; Notecard from Blues' NOTE-NBGL datasheet; PIR from HC-SR501-class module specs; smoke detector supervisory/alarm current from a Potter Signal-class 12V-bus photoelectric module; LED fixture draw from Ohm's law on a representative 10W/12V product spec. <strong>Duty cycles for the PIR, the lighting dimming/motion-boost split, and telemetry session length are deployment assumptions, not datasheet values</strong> — all three need bench/field validation once real firmware and fixtures are in hand (Sec. 13). RS-485 transceiver overhead is a rough placeholder, not yet sourced from a specific part.</div>
       <div class="callout info"><strong>Sizing standard:</strong> size to a conservative worst-case sun-hour assumption (a low-sun winter reference site) rather than tuning per install location — one hardware spec that works everywhere, instead of a per-site solar calculation for every new facility.</div>
       <div class="callout"><strong>Battery chemistry:</strong> LiFePO4 for both the per-bay and Notecard batteries — more stable under heat and vibration than other lithium chemistries, safer failure mode, appropriate for outdoor unattended deployment.</div>
     </section>
