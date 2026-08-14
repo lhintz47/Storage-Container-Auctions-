@@ -195,6 +195,7 @@
     <p class="subhead">Hardware and software architecture for a self-contained, solar-powered control unit monitoring and securing an individual storage/auction container section: alarm, safety lighting, access lock, sensors, camera, and the backend that all of it reports to.</p>
     <div class="stat-strip">
       <div class="stat-cell"><span class="k">Power</span><span class="v">Solar + battery, per unit</span></div>
+      <div class="stat-cell"><span class="k">Controller</span><span class="v">ESP32 + Blues Notecard (Cell+GPS)</span></div>
       <div class="stat-cell"><span class="k">Connectivity</span><span class="v">Cellular (LTE-M/NB-IoT + LTE)</span></div>
       <div class="stat-cell"><span class="k">Uplink protocol</span><span class="v">MQTT over TLS</span></div>
       <div class="stat-cell"><span class="k">Lock model</span><span class="v">Standalone smart padlock, cloud-correlated</span></div>
@@ -264,7 +265,8 @@
       <p>The controller is the only always-on, hard-wired component in the unit. It owns the alarm, the safety lighting, and every sensor except the lock and camera.</p>
       <h3>Hardware</h3>
       <ul class="plain">
-        <li><strong>MCU class:</strong> ESP32- or STM32-class microcontroller with a real-time OS or bare-metal event loop — low idle power draw is the driver, not raw compute.</li>
+        <li><strong>MCU:</strong> ESP32-class, running a real-time OS or bare-metal event loop, handling all sensor GPIO and the two relay outputs (siren, lighting).</li>
+        <li><strong>Cellular + GPS:</strong> Blues Wireless Notecard (Cell+GPS variant), bridged to the MCU over I2C. A pre-certified, mass-produced module rather than a custom cellular design — offloads the highest-risk, highest-cost part of the build (RF certification, carrier registration, antenna tuning) to hardware that's already proven in the field. Its built-in GNSS also covers the GPS/movement-tracking sensor (Sec. 03) directly, so no separate GPS module is needed.</li>
         <li><strong>Enclosure:</strong> IP65+ weatherproof, vented for the battery, mounted inside the container near the door for direct sensor wiring runs.</li>
         <li><strong>Power bus:</strong> single 12V DC bus off the battery, with a buck converter stepping down to 3.3V/5V logic rails for the MCU and sensors.</li>
         <li><strong>Local storage:</strong> onboard flash or a small SD card for the store-and-forward event buffer (Sec. 10).</li>
@@ -296,7 +298,7 @@
             <tr><td>Motion detector</td><td>PIR</td><td>Interior-facing; only meaningful while armed (unit should be empty).</td></tr>
             <tr><td>Tamper switch</td><td>Case-open microswitch</td><td>On both the controller enclosure and, where the lock hardware supports it, the lock body.</td></tr>
             <tr><td>Fire/smoke/heat</td><td>Photoelectric smoke + thermistor heat-rise</td><td>Dual-sensor confirmation before escalating to a full fire alert reduces false triggers from dust or temperature swings alone.</td></tr>
-            <tr><td>GPS/movement</td><td>u-blox-class GNSS module</td><td>Duty-cycled fix (not continuous tracking) to conserve power; movement delta beyond threshold (default ~10 ft, tunable) triggers an alert.</td></tr>
+            <tr><td>GPS/movement</td><td>Notecard's built-in GNSS (Sec. 02)</td><td>Duty-cycled fix (not continuous tracking) to conserve power; movement delta beyond threshold (default ~10 ft, tunable) triggers an alert.</td></tr>
             <tr><td>Battery/solar monitor</td><td>Voltage + current sense on the charge controller</td><td>State-of-charge estimate reported on every heartbeat, not just on fault.</td></tr>
             <tr><td>Alarm siren/strobe</td><td>12V actuator, controller-driven relay</td><td>Fires locally and immediately on <span class="mono">ALARM</span> entry — see Sec. 10 on the offline case.</td></tr>
             <tr><td>Safety lighting</td><td>LED, dusk-to-dawn + motion-boosted</td><td>Largest single power draw in the budget (Sec. 06); dimmed baseline with a motion-triggered boost is the efficient default.</td></tr>
@@ -447,10 +449,9 @@
     <section class="block" id="open">
       <div class="block-tag"><span class="code">SPEC&#8209;12</span><h2>Open engineering questions</h2></div>
       <ul class="open-list">
-        <li class="open-item"><span class="mark">?</span><span><strong>Controller hardware SKU</strong><span class="note">MCU class is specified (Sec. 02); exact board/vendor not chosen.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Camera vendor API access</strong><span class="note">The relay approach (Sec. 05) assumes an API suitable for pulling and re-serving the stream — needs confirming against the actual camera vendor's offering.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Real component power draws</strong><span class="note">Sec. 06's budget stays illustrative on purpose — blocked on the controller hardware decision (still open above), since real numbers depend on which parts get chosen.</span></span></li>
-        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standard is now worst-case (Sec. 06) — still blocked on the real power budget (controller hardware decision above) to turn that into an actual battery/panel spec.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Real component power draws</strong><span class="note">Controller hardware is now chosen (ESP32 + Blues Notecard, Sec. 02) — Sec. 06's budget can move from illustrative to real numbers by pulling actual current-draw specs from both datasheets.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>Battery/solar panel sizing</strong><span class="note">Sizing standard is worst-case (Sec. 06); still waiting on the real power budget above to turn that into an actual battery/panel spec.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Cellular data plan costs</strong><span class="note">Both the low-bandwidth controller plan and the camera's viewer-dependent plan need real pricing once volumes are estimated.</span></span></li>
       </ul>
     </section>
