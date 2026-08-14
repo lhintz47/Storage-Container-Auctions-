@@ -397,6 +397,15 @@
         <li><strong>Direct CAD/dispatch integration.</strong> Pushing the code straight into a department's dispatch system electronically. Real in some jurisdictions, likely out of reach for a small private operator early on.</li>
       </ol>
       <p>Recommended default: Knox Box as the primary path, monitored-operator relay as the software-side backup. The Wi-Fi Bridge / live-unlock path above is optional on top of these, not a replacement for either.</p>
+
+      <h3>PIN code capacity</h3>
+      <p>Real numbers from igloohome's own documentation, and they put real pressure on the four-code design (seller, buyer, facility manager, fire department):</p>
+      <ul class="plain">
+        <li><strong>1 Master PIN per lock</strong> — a separate slot from the generated-PIN pool below, doesn't count against either limit. Use it for the one role that's truly permanent: the facility manager code.</li>
+        <li><strong>285 total PIN generations, lifetime</strong> — a hard cap on the lock's generated-PIN list. Once hit, the only way past it is "Clear PIN list," which invalidates every previously generated code at once (the Master PIN survives). That makes periodic list-clearing a real operational task, not a one-time setup step (Sec. 11).</li>
+        <li><strong>3 PIN generations per date</strong> — a throttle on how many new codes can be created for the same day. The exact scope (creation date vs. validity date vs. a true concurrent-code ceiling) isn't confirmed from public documentation (Sec. 13) — but under any reading, it's tight once the seller code, buyer code, and fire department code are all drawing from the same limited pool, especially on a day when a code rotation (Sec. 07's setup/removal handoff) coincides with generating an ad-hoc emergency PIN for a responder.</li>
+      </ul>
+      <p>Practical allocation: Master PIN &rarr; facility manager (free, doesn't touch the pool). Generated-PIN pool &rarr; seller code, buyer code, fire department code, and any one-off emergency PINs, sharing the 285-lifetime/3-per-date limits between them. Worth confirming the exact per-date semantics directly with igloohome before treating this as settled, since "tight" and "broken" are very different outcomes depending on which interpretation is correct.</p>
     </section>
 
     <section class="block" id="camera">
@@ -571,6 +580,8 @@
         <li class="open-item"><span class="mark">?</span><span><strong>Bridge redundancy</strong><span class="note">The 4-way host failover in Sec. 02 removes the old A/B-only limit but introduces the I2C&ndash;RS-485 bridge as a new single point of failure for Notecard access — undecided whether a single bridge is acceptable or whether it needs its own backup.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>igloohome Wi-Fi Bridge coverage per lock</strong><span class="note">Sec. 04 assumes it's plausible for one bridge to cover all four bays' locks over Bluetooth, but that hasn't been confirmed against igloohome's actual per-bridge lock limit.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Knox Box program enrollment</strong><span class="note">Sec. 04's recommended primary emergency-access path depends on the local fire department's Knox Box program actually covering each facility's jurisdiction — needs confirming per site, not assumed universal.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>"3 PIN codes per date" exact semantics</strong><span class="note">Sec. 04 flags this igloohome throttle as unconfirmed between creation-date, validity-date, or true concurrent-code readings — directly affects whether the four-code allocation is comfortable or right at the edge, needs confirming with igloohome directly rather than inferred from public docs.</span></span></li>
+        <li class="open-item"><span class="mark">?</span><span><strong>PIN list reset cadence</strong><span class="note">The 285-lifetime cap (Sec. 04) means "Clear PIN list" becomes a recurring maintenance task, not a one-time setup step — no cadence or procedure defined yet for when a lock approaches the cap.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Enclosure interior temperature, measured</strong><span class="note">Sec. 12 flags real risk of exceeding the Notecard's +75&deg;C ceiling inside a sun-loaded steel container — needs an actual field measurement, not just the mitigation plan.</span></span></li>
         <li class="open-item"><span class="mark">?</span><span><strong>Vibration/shock standard</strong><span class="note">Sec. 12 flags this as unvalidated against any real standard for a relocatable-container deployment — needs one chosen (e.g. an automotive or MIL-STD-810-style shock/vibe profile) and tested against.</span></span></li>
       </ul>
